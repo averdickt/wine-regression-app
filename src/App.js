@@ -1,27 +1,109 @@
-import React from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ScatterChart, Scatter } from 'recharts';
-
-const data = [
-  { year: 2000, score: 95, price: 300 },
-  { year: 2001, score: 92, price: 250 },
-  { year: 2002, score: 100, price: 180 }, // standout value
-  { year: 2003, score: 96, price: 310 },
-  { year: 2004, score: 94, price: 320 },
-];
+import React, { useState } from 'react';
+import * as XLSX from 'xlsx';
+import regression from 'regression';
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid,
+  Tooltip, Scatter, ResponsiveContainer, ScatterChart
+} from 'recharts';
 
 function App() {
+  const [chartData, setChartData] = useState([]);
+  const [regressionData, setRegressionData] = useState([]);
+
+  const parsePrice = (row) => {
+    const bid = parseFloat(row['bid per case']);
+    const offer = parseFloat(row['offer per case']);
+    const lastTrade = parseFloat(row['last trade price']);
+
+    if (!isNaN(bid) && !isNaN(offer)) {
+      return (bid + offer) / 2;
+    } else if (!isNaN(lastTrade)) {
+      return lastTrade;
+    }
+    return null;
+  };
+
+  const extractBottleCount = (description) => {
+    const match = description?.match(/^(\d+)\s*x/i);
+    return match ? parseInt(match[1], 10) : null;
+  };
+
+  const isValidRow = (row) => {
+    return (
+      row['bottle condition']?.toLowerCase() === 'pristine' &&
+      typeof row['case description'] === 'string' &&
+      row['case description'].trim().toLowerCase().endsWith('75cl')
+    );
+  };
+
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      const binaryStr = e.target.result;
+      const workbook = XLSX.read(binaryStr, { type: 'binary' });
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(worksheet);
+
+      const filtered = rows
+        .filter(isValidRow)
+        .map((row) => {
+          const casePrice = parsePrice(row);
+          const bottleCount = extractBottleCount(row['case description']);
+          const vintage = parseInt(row['vintage'], 10);
+
+          if (casePrice && bottleCount && vintage) {
+            return {
+              vintage,
+              price: casePrice / bottleCount,
+              product: row['product']
+            };
+          }
+          return null;
+        })
+        .filter(Boolean);
+
+      setChartData(filtered);
+
+      // Generate regression: price vs vintage
+      const regPoints = filtered.map(d => [d.vintage, d.price]);
+      const result = regression.linear(regPoints);
+      const regLine = filtered.map(d => ({
+        vintage: d.vintage,
+        price: result.predict(d.vintage)[1]
+      }));
+
+      setRegressionData(regLine);
+    };
+
+    reader.readAsBinaryString(file);
+  };
+
   return (
-    <div style={{ width: '100%', height: 400 }}>
-      <h2>Wine Price vs Score Regression</h2>
-      <ResponsiveContainer>
-        <ScatterChart>
-          <CartesianGrid />
-          <XAxis dataKey="year" name="Year" />
-          <YAxis dataKey="price" name="Price (£)" />
-          <Tooltip />
-          <Scatter name="Wines" data={data} fill="#800020" />
-        </ScatterChart>
-      </ResponsiveContainer>
+    <div style={{ padding: 20 }}>
+      <h2>Wine Price Regression</h2>
+      <input type="file" accept=".xlsx" onChange={handleFileUpload} />
+
+      {chartData.length > 0 && (
+        <ResponsiveContainer width="100%" height={500}>
+          <LineChart>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="vintage" type="number" domain={['auto', 'auto']} />
+            <YAxis dataKey="price" type="number" domain={['auto', 'auto']} />
+            <Tooltip />
+            <Scatter name="Wine Data" data={chartData} fill="#8884d8" />
+            <Line
+              type="monotone"
+              data={regressionData}
+              dataKey="price"
+              stroke="#ff7300"
+              dot={false}
+              name="Regression Line"
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      )}
     </div>
   );
 }
