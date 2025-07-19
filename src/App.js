@@ -1,16 +1,4 @@
-import React, { useState } from 'react';
-import * as XLSX from 'xlsx';
-import regression from 'regression';
-import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid,
-  Tooltip, Scatter, ResponsiveContainer
-} from 'recharts';
-
-function App() {
-  const [chartData, setChartData] = useState([]);
-  const [regressionData, setRegressionData] = useState([]);
-
-  const parsePrice = (row) => {
+const parsePrice = (row) => {
     const bid = parseFloat(row['bid per case']);
     const offer = parseFloat(row['offer per case']);
     const lastTrade = parseFloat(row['last trade price']);
@@ -77,38 +65,4 @@ function App() {
   reader.readAsBinaryString(file);
   };
 
-  return (
-    <div style={{ padding: 20 }}>
-      <h2>Wine Price Regression</h2>
-      <input type="file" accept=".xlsx" onChange={handleFileUpload} />
-
-      {chartData.length === 0 && (
-        <p style={{ marginTop: 20, fontStyle: 'italic' }}>
-          Please upload a valid Excel file to see chart data.
-        </p>
-      )}
-
-      {chartData.length > 0 && (
-        <ResponsiveContainer width="100%" height={500}>
-          <LineChart>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="vintage" type="number" domain={['auto', 'auto']} />
-            <YAxis dataKey="price" type="number" domain={['auto', 'auto']} />
-            <Tooltip />
-            <Scatter name="Wine Data" data={chartData} fill="#8884d8" />
-            <Line
-              type="monotone"
-              data={regressionData}
-              dataKey="price"
-              stroke="#ff7300"
-              dot={false}
-              name="Regression Line"
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      )}
-    </div>
-  );
-}
-
-export default App;
+  
