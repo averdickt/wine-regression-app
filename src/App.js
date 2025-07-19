@@ -3,7 +3,7 @@ import * as XLSX from 'xlsx';
 import regression from 'regression';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
-  Tooltip, Scatter, ResponsiveContainer, ScatterChart
+  Tooltip, Scatter, ResponsiveContainer
 } from 'recharts';
 
 function App() {
@@ -75,6 +75,10 @@ function App() {
       }));
 
       setRegressionData(regLine);
+
+      // Helpful debug logs for testing
+      console.log("Parsed rows:", filtered);
+      console.log("Regression line:", regLine);
     };
 
     reader.readAsBinaryString(file);
@@ -84,6 +88,12 @@ function App() {
     <div style={{ padding: 20 }}>
       <h2>Wine Price Regression</h2>
       <input type="file" accept=".xlsx" onChange={handleFileUpload} />
+
+      {chartData.length === 0 && (
+        <p style={{ marginTop: 20, fontStyle: 'italic' }}>
+          Please upload a valid Excel file to see chart data.
+        </p>
+      )}
 
       {chartData.length > 0 && (
         <ResponsiveContainer width="100%" height={500}>
