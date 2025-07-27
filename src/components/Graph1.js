@@ -1,97 +1,53 @@
-#### 5. Graph 2: Year vs. Price/Score with Drinking Age Overlay (`src/components/Graph2.js`)
-
-```javascript
-// src/components/Graph2.js
+// src/components/Graph1.js
 import React, { useMemo } from "react";
-import { Bar } from "react-chartjs-2";
-import { Chart as ChartJS, BarController, ScatterController, PointElement, BarElement, LinearScale, Title, Tooltip, Legend } from "chart.js";
-import { wineData } from "../utils/data";
+import { Scatter } from "react-chartjs-2";
+import { Chart as ChartJS, LineController, ScatterController, PointElement, LineElement, LinearScale, Title, Tooltip, Legend } from "chart.js";
+import { calculateRegression } from "../utils/regression";
+import WineDataDisplay from "./WineDataDisplay";
 
-ChartJS.register(BarController, ScatterController, PointElement, BarElement, LinearScale, Title, Tooltip, Legend);
+ChartJS.register(LineController, ScatterController, PointElement, LineElement, LinearScale, Title, Tooltip, Legend);
 
-const Graph2 = ({ filters }) => {
-  const filteredData = useMemo(() => {
-    let data = wineData;
-    if (filters.wine !== "all") data = data.filter((d) => d.wine === filters.wine);
-    if (filters.region !== "all") data = data.filter((d) => d.region === filters.region);
-    if (filters.wineClass !== "all") data = data.filter((d) => d.wineClass === filters.wineClass);
-    return data;
-  }, [filters.wine, filters.region, filters.wineClass]);
-
-  const getColor = (vintage, daStart, daFinish) => {
-    const currentYear = 2025;
-    const age = currentYear - vintage;
-    if (age < daStart) {
-      // Yellow gradient for too young
-      return `hsl(60, 100%, ${50 + (age / daStart) * 25}%)`;
-    } else if (age > daFinish) {
-      // Red gradient for too old
-      return `hsl(0, 100%, ${50 + ((age - daFinish) / 10) * 25}%)`;
-    } else {
-      // Green gradient for drinkable
-      return `hsl(120, 100%, ${50 + ((age - daStart) / (daFinish - daStart)) * 25}%)`;
-    }
-  };
+const Graph1 = ({ filters, filteredData }) => {
+  const regression = useMemo(() => calculateRegression(filteredData, "score", "price"), [filteredData]);
 
   const chartData = {
     datasets: [
       {
-        type: "bar",
-        label: "Price",
-        data: filteredData.map((d) => ({ x: d.vintage, y: d.price })),
-        backgroundColor: filteredData.map((d) => getColor(d.vintage, d.daStart, d.daFinish)),
-        yAxisID: "y",
+        type: "scatter",
+        label: "Wines",
+        data: filteredData.map((d) => ({ x: d.score, y: d.price })),
+        backgroundColor: filteredData.map((d) => `hsl(${(d.vintage % 10) * 36}, 70%, 50%)`),
+        pointRadius: 5,
       },
       {
-        type: "scatter",
-        label: "Score",
-        data: filteredData.map((d) => ({ x: d.vintage, y: d.score })),
-        backgroundColor: filteredData.map((d) => getColor(d.vintage, d.daStart, d.daFinish)),
-        pointRadius: 5,
-        yAxisID: "y1",
+        type: "line",
+        label: "Regression Line",
+        data: [
+          { x: Math.min(...filteredData.map((d) => d.score)), y: regression.slope * Math.min(...filteredData.map((d) => d.score)) + regression.intercept },
+          { x: Math.max(...filteredData.map((d) => d.score)), y: regression.slope * Math.max(...filteredData.map((d) => d.score)) + regression.intercept },
+        ],
+        borderColor: "#ffffff",
+        fill: false,
+        pointRadius: 0,
       },
     ],
   };
 
-  ```chartjs
-  {
-    "type": "bar",
-    "data": {
-      "datasets": [
-        {
-          "type": "bar",
-          "label": "Price",
-          "data": ${JSON.stringify(filteredData.map((d) => ({ x: d.vintage, y: d.price })))},
-          "backgroundColor": ${JSON.stringify(filteredData.map((d) => getColor(d.vintage, d.daStart, d.daFinish)))},
-          "yAxisID": "y"
-        },
-        {
-          "type": "scatter",
-          "label": "Score",
-          "data": ${JSON.stringify(filteredData.map((d) => ({ x: d.vintage, y: d.score })))},
-          "backgroundColor": ${JSON.stringify(filteredData.map((d) => getColor(d.vintage, d.daStart, d.daFinish)))},
-          "pointRadius": 5,
-          "yAxisID": "y1"
-        }
-      ]
-    },
-    "options": {
-      "scales": {
-        "x": {
-          "title": { "display": true, "text": "Vintage" }
-        },
-        "y": {
-          "title": { "display": true, "text": "Price ($)" },
-          "position": "left"
-        },
-        "y1": {
-          "title": { "display": true, "text": "Score" },
-          "position": "right"
-        }
-      },
-      "plugins": {
-        "legend": { "display": true },
-        "tooltip": { "enabled": true }
-      }
-    }
-  }
+  return (
+    <div>
+      <h3>Score vs. Price</h3>
+      <Scatter
+        data={chartData}
+        options={{
+          scales: {
+            x: { title: { display: true, text: "Score" } },
+            y: { title: { display: true, text: "Price ($)" } },
+          },
+        }}
+      />
+      <WineDataDisplay filters={filters} filteredData={filteredData} />
+    </div>
+  );
+};
+
+export default Graph1;
