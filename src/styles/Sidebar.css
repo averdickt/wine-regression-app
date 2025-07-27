@@ -1,1 +1,86 @@
+// src/components/Sidebar.js
+import React from "react";
+import { getUniqueValues, wineData } from "../utils/data";
+import "../styles/Sidebar.css";
 
+const Sidebar = ({ filters, setFilters }) => {
+  const wines = getUniqueValues(wineData, "wine");
+  const vintages = getUniqueValues(wineData, "vintage");
+  const regions = getUniqueValues(wineData, "region");
+  const scores = getUniqueValues(wineData, "score");
+  const wineClasses = getUniqueValues(wineData, "wineClass");
+
+  const handleFilterChange = (e) => {
+    setFilters({ ...filters, [e.target.name]: e.target.value });
+  };
+
+  const handleCheckboxChange = (e) => {
+    setFilters({ ...filters, [e.target.name]: e.target.checked });
+  };
+
+  return (
+    <div className="sidebar">
+      <h3>Filters</h3>
+      <label>
+        Wine:
+        <select name="wine" value={filters.wine} onChange={handleFilterChange}>
+          {wines.map((wine) => (
+            <option key={wine} value={wine}>{wine}</option>
+          ))}
+        </select>
+      </label>
+      <label>
+        Vintage:
+        <select name="vintage" value={filters.vintage} onChange={handleFilterChange}>
+          {vintages.map((vintage) => (
+            <option key={vintage} value={vintage}>{vintage}</option>
+          ))}
+        </select>
+      </label>
+      <label>
+        Region:
+        <select name="region" value={filters.region} onChange={handleFilterChange}>
+          {regions.map((region) => (
+            <option key={region} value={region}>{region}</option>
+          ))}
+        </select>
+      </label>
+      <label>
+        Score:
+        <select name="score" value={filters.score} onChange={handleFilterChange}>
+          {scores.map((score) => (
+            <option key={score} value={score}>{score}</option>
+          ))}
+        </select>
+      </label>
+      <label>
+        Wine Class:
+        <select name="wineClass" value={filters.wineClass} onChange={handleFilterChange}>
+          {wineClasses.map((wc) => (
+            <option key={wc} value={wc}>{wc}</option>
+          ))}
+        </select>
+      </label>
+      <label>
+        <input
+          type="checkbox"
+          name="groupByRegion"
+          checked={filters.groupByRegion}
+          onChange={handleCheckboxChange}
+        />
+        Group by Region
+      </label>
+      <label>
+        <input
+          type="checkbox"
+          name="groupByWineClass"
+          checked={filters.groupByWineClass}
+          onChange={handleCheckboxChange}
+        />
+        Group by Wine Class
+      </label>
+    </div>
+  );
+};
+
+export default Sidebar;
