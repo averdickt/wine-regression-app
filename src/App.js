@@ -1,87 +1,98 @@
-import React, { useState } from 'react';
-import * as XLSX from 'xlsx';
-import RegressionChart from './RegressionChart'; // if you have this component
-import WineScoreBarChart from './WineScoreBarChart'; // <- NEW IMPORT
+// src/App.js
+import React, { useState, useMemo } from "react";
+import Sidebar from "./components/Sidebar";
+import Graph1 from "./components/Graph1";
+import Graph2 from "./components/Graph2";
+import Graph3 from "./components/Graph3";
+import { wineData } from "./utils/data";
+import "./App.css";
 
-function App() {
-  const [regressionData, setRegressionData] = useState([]);
-  const [scoreData, setScoreData] = useState([]);
+const App = () => {
+  // State for filters (dropdowns and checkboxes)
+  const [filters, setFilters] = useState({
+    wine: "all",
+    vintage: "all",
+    region: "all",
+    score: "all",
+    wineClass: "all",
+    groupByRegion: false,
+    groupByWineClass: false,
+  });
 
-  const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
-    const reader = new FileReader();
+  // Memoized filtered data based on dropdown selections
+  const filteredData = useMemo(() => {
+    let data = wineData;
 
-    reader.onload = async (evt) => {
-      const bstr = evt.target.result;
-      const workbook = XLSX.read(bstr, { type: 'binary' });
-      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+    // Apply filters from dropdowns
+    if (filters.wine !== "all") {
+      data = data.filter((d) => d.wine === filters.wine);
+    }
+    if (filters.vintage !== "all") {
+      data = data.filter((d) => d.vintage === Number(filters.vintage));
+    }
+    if (filters.region !== "all") {
+      data = data.filter((d) => d.region === filters.region);
+    }
+    if (filters.score !== "all") {
+      data = data.filter((d) => d.score === Number(filters.score));
+    }
+    if (filters.wineClass !== "all") {
+      data = data.filter((d) => d.wineClass === filters.wineClass);
+    }
 
-      const cleaned = jsonData
-        .filter(row => row['bottle condition'] === 'Pristine')
-        .filter(row => String(row['case description']).trim().endsWith('75cl'))
-        .map(row => {
-          const vintage = row['vintage'];
-          const product = row['product'];
-          const caseDesc = row['case description'];
-          const bid = parseFloat(row['bid per case']);
-          const offer = parseFloat(row['offer per case']);
-          const lastTrade = parseFloat(row['last trade price']);
-          const bottles = parseInt(caseDesc.split('x')[0]);
-
-          let price = null;
-          if (!isNaN(bid) && !isNaN(offer)) {
-            price = (bid + offer) / 2 / bottles;
-          } else if (!isNaN(lastTrade)) {
-            price = lastTrade / bottles;
-          }
-
-          if (!price || !vintage || !product || isNaN(price)) return null;
-
-          return {
-            vintage,
-            product,
-            price: Math.round(price * 100) / 100,
-            score: Math.floor(85 + Math.random() * 10) // dummy score for now
-          };
-        }).filter(Boolean);
-
-      setRegressionData(cleaned);
-
+    // Apply grouping logic for checkboxes (optional aggregation)
+    if (filters.groupByRegion && filters.region === "all") {
+      // Example: Group by region, averaging price and score
       const grouped = {};
-      cleaned.forEach(row => {
-        const { vintage, price, score } = row;
-        if (!grouped[vintage]) {
-          grouped[vintage] = { totalPrice: 0, totalScore: 0, count: 0 };
+      data.forEach((d) => {
+        const key = d.region;
+        if (!grouped[key]) {
+          grouped[key] = { ...d, count: 1, price: d.price, score: d.score };
+        } else {
+          grouped[key].price += d.price;
+          grouped[key].score += d.score;
+          grouped[key].count += 1;
         }
-        grouped[vintage].totalPrice += price;
-        grouped[vintage].totalScore += score;
-        grouped[vintage].count += 1;
       });
-
-      const aggregated = Object.entries(grouped).map(([year, vals]) => ({
-        year,
-        price: Math.round((vals.totalPrice / vals.count) * 100) / 100,
-        score: Math.round((vals.totalScore / vals.count) * 10) / 10
+      data = Object.values(grouped).map((d) => ({
+        ...d,
+        price: d.price / d.count,
+        score: d.score / d.count,
       }));
+    } else if (filters.groupByWineClass && filters.wineClass === "all") {
+      // Example: Group by wine class, averaging price and score
+      const grouped = {};
+      data.forEach((d) => {
+        const key = d.wineClass;
+        if (!grouped[key]) {
+          grouped[key] = { ...d, count: 1, price: d.price, score: d.score };
+        } else {
+          grouped[key].price += d.price;
+          grouped[key].score += d.score;
+          grouped[key].count += 1;
+        }
+      });
+      data = Object.values(grouped).map((d) => ({
+        ...d,
+        price: d.price / d.count,
+        score: d.score / d.count,
+      }));
+    }
 
-      setScoreData(aggregated);
-    };
-
-    reader.readAsBinaryString(file);
-  };
+    return data;
+  }, [filters]);
 
   return (
-    <div>
-      <h2>Wine Regression App</h2>
-      <input type="file" accept=".xlsx" onChange={handleFileUpload} />
-
-      {/* Render both charts */}
-      <RegressionChart data={regressionData} />
-      <WineScoreBarChart data={scoreData} />
+    <div className="app">
+      <Sidebar filters={filters} setFilters={setFilters} />
+      <div className="content">
+        <Graph1 filters={filters} filteredData={filteredData} />
+        <Graph2 filters={filters} filteredData={filteredData} />
+        <Graph3 filters={filters} filteredData={filteredData} />
+      </div>
     </div>
   );
-}
+};
 
 export default App;
 
