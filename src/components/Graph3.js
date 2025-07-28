@@ -1,6 +1,3 @@
-#### 7. Main App (`src/App.js`)
-
-```javascript
 // src/App.js
 import React, { useState } from "react";
 import Sidebar from "./components/Sidebar";
