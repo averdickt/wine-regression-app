@@ -1,7 +1,4 @@
-#### 6. Graph 3: Wine vs. Price for Selected Score (`src/components/Graph3.js`)
-
-```javascript
-// src/components/Graph3.js
+// src/components/Graph2.js
 import React, { useMemo } from "react";
 import { Bar } from "react-chartjs-2";
 import { Chart as ChartJS, BarController, BarElement, LinearScale, Title, Tooltip, Legend } from "chart.js";
@@ -9,7 +6,7 @@ import { wineData } from "../utils/data";
 
 ChartJS.register(BarController, BarElement, LinearScale, Title, Tooltip, Legend);
 
-const Graph3 = ({ filters }) => {
+const Graph2 = ({ filters }) => {
   if (filters.score === "all") return <div>Please select a score to display this graph.</div>;
 
   const filteredData = useMemo(() => {
@@ -36,31 +33,22 @@ const Graph3 = ({ filters }) => {
     ],
   };
 
-  ```chartjs
-  {
-    "type": "bar",
-    "data": {
-      "labels": ${JSON.stringify(filteredData.map((d) => d.wine))},
-      "datasets": [
-        {
-          "label": "Price for Score ${filters.score}",
-          "data": ${JSON.stringify(filteredData.map((d) => d.price))},
-          "backgroundColor": ${JSON.stringify(filteredData.map((d) => colorMap[d.region]))}
-        }
-      ]
-    },
-    "options": {
-      "scales": {
-        "x": {
-          "title": { "display": true, "text": "Wine" }
-        },
-        "y": {
-          "title": { "display": true, "text": "Price ($)" }
-        }
+  const options = {
+    scales: {
+      x: {
+        title: { display: true, text: "Wine" },
       },
-      "plugins": {
-        "legend": { "display": true },
-        "tooltip": { "enabled": true }
-      }
-    }
-  }
+      y: {
+        title: { display: true, text: "Price ($)" },
+      },
+    },
+    plugins: {
+      legend: { display: true },
+      tooltip: { enabled: true },
+    },
+  };
+
+  return <Bar data={chartData} options={options} />;
+};
+
+export default Graph2;
