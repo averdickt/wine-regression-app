@@ -1,69 +1,49 @@
-import * as regression from "regression";
+import regression from "regression";
 
 /**
- * Fits best regression line for Price vs Score
- * Chooses between Linear and Polynomial (degree 2) based on R²
- *
- * @param {Array} data - Array of objects with { score, price }
- * @param {number} targetScore - Score of the wine to check
- * @returns {Object} Regression results
+ * Fits the best regression model (linear or polynomial) to wine price vs score
+ * @param {Array} data - Array of objects with {score, price}
+ * @param {Number} targetScore - Score to predict price for
+ * @returns {Object} { type, predictedPrice, points }
  */
 export function fitBestRegression(data, targetScore) {
-  if (!data || data.length < 3) {
-    return { error: "Not enough data for regression" };
+  if (!data || data.length < 2) {
+    return { type: null, predictedPrice: null, points: [] };
   }
 
-  // Convert to [score, price] pairs
-  const points = data.map(d => [d.score, d.price]);
+  // Format for regression library
+  const formatted = data.map(d => [d.score, d.price]);
 
-  // Fit Linear Regression
-  const linearResult = regression.linear(points, { precision: 4 });
-  const linearR2 = calculateR2(points, linearResult.predict);
+  // Try linear
+  const linearResult = regression.linear(formatted, { precision: 6 });
+  const polyResult = regression.polynomial(formatted, { order: 2, precision: 6 });
 
-  // Fit Polynomial (degree 2)
-  const polyResult = regression.polynomial(points, { order: 2, precision: 4 });
-  const polyR2 = calculateR2(points, polyResult.predict);
+  // Pick the better one (higher R²)
+  const chosen = polyResult.r2 > linearResult.r2 ? polyResult : linearResult;
+  const type = polyResult.r2 > linearResult.r2 ? "polynomial" : "linear";
 
-  // Choose best model (if poly improves R² by > 0.02, use it)
-  let bestModel, type;
-  if (polyR2 - linearR2 > 0.02) {
-    bestModel = polyResult;
-    type = "polynomial";
-  } else {
-    bestModel = linearResult;
-    type = "linear";
+  // Predict target score
+  let predictedPrice = null;
+  if (typeof targetScore === "number") {
+    predictedPrice = chosen.predict(targetScore)[1];
   }
 
-  // Predict price for target score
-  const predictedPrice = bestModel.predict(targetScore)[1];
+  // Create smooth regression line points
+  const scoreMin = Math.min(...data.map(p => p.score));
+  const scoreMax = Math.max(...data.map(p => p.score));
+  const step = (scoreMax - scoreMin) / 40; // 40 segments for smoothness
+
+  const points = [];
+  for (let s = scoreMin; s <= scoreMax; s += step) {
+    points.push({
+      score: s,
+      price: chosen.predict(s)[1]
+    });
+  }
 
   return {
     type,
-    equation: bestModel.string, // Human-readable equation
-    r2: type === "linear" ? linearR2 : polyR2,
     predictedPrice,
-    slope: type === "linear" ? bestModel.equation[0] : null,
-    intercept: type === "linear" ? bestModel.equation[1] : null,
-    residuals: points.map(([x, y]) => ({
-      score: x,
-      actual: y,
-      predicted: bestModel.predict(x)[1],
-      diff: y - bestModel.predict(x)[1]
-    }))
+    points
   };
 }
-
-/**
- * Calculate R² manually (since regression lib's R² is not exposed cleanly)
- */
-function calculateR2(points, predictFn) {
-  const yVals = points.map(p => p[1]);
-  const yMean = yVals.reduce((a, b) => a + b, 0) / yVals.length;
-  const ssTot = yVals.reduce((sum, y) => sum + Math.pow(y - yMean, 2), 0);
-  const ssRes = points.reduce(
-    (sum, [x, y]) => sum + Math.pow(y - predictFn(x)[1], 2),
-    0
-  );
-  return 1 - ssRes / ssTot;
-}
-
