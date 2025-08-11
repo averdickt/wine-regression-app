@@ -1,54 +1,103 @@
-// src/components/Graph2.js
 import React, { useMemo } from "react";
-import { Bar } from "react-chartjs-2";
-import { Chart as ChartJS, BarController, BarElement, LinearScale, Title, Tooltip, Legend } from "chart.js";
-import { wineData } from "../utils/data";
+import {
+  ComposedChart,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  Bar,
+  Scatter,
+  CartesianGrid,
+  ResponsiveContainer
+} from "recharts";
 
-ChartJS.register(BarController, BarElement, LinearScale, Title, Tooltip, Legend);
+const Graph2 = ({ wineData, selectedProduct }) => {
+  const today = new Date();
 
-const Graph2 = ({ filters }) => {
-  if (filters.score === "all") return <div>Please select a score to display this graph.</div>;
-
+  // Filter only rows for the selected product
   const filteredData = useMemo(() => {
-    let data = wineData.filter((d) => d.score === Number(filters.score));
-    if (filters.region !== "all") data = data.filter((d) => d.region === filters.region);
-    if (filters.wineClass !== "all") data = data.filter((d) => d.wineClass === filters.wineClass);
-    return data;
-  }, [filters.score, filters.region, filters.wineClass]);
+    return wineData
+      .filter(row => row.Product === selectedProduct)
+      .map(row => {
+        const daStart = new Date(row["DA Start"], 0, 1); // year only
+        const daFinish = new Date(row["DA Finish"], 11, 31);
 
-  const regions = [...new Set(wineData.map((d) => d.region))];
-  const colorMap = regions.reduce((acc, region, i) => ({
-    ...acc,
-    [region]: `hsl(${i * 60}, 70%, 50%)`,
-  }), {});
+        // Colour gradation logic
+        let color;
+        if (today > daFinish) {
+          const yearsPast = today.getFullYear() - daFinish.getFullYear();
+          const intensity = Math.min(1, yearsPast / 10); // cap at 10 years
+          color = `rgb(${Math.floor(150 + 105 * intensity)}, 0, 0)`; // dark to bright red
+        } else if (today < daStart) {
+          const yearsBefore = daStart.getFullYear() - today.getFullYear();
+          const intensity = Math.min(1, yearsBefore / 10);
+          color = `rgb(${Math.floor(255)}, ${Math.floor(255 * (1 - intensity))}, 0)`; // yellow shades
+        } else {
+          const totalWindow = daFinish.getFullYear() - daStart.getFullYear();
+          const yearsIntoWindow = today.getFullYear() - daStart.getFullYear();
+          const progress = yearsIntoWindow / totalWindow;
+          color = `rgb(0, ${Math.floor(150 + 105 * progress)}, 0)`; // light green to dark green
+        }
 
-  const chartData = {
-    labels: filteredData.map((d) => d.wine),
-    datasets: [
-      {
-        label: `Price for Score ${filters.score}`,
-        data: filteredData.map((d) => d.price),
-        backgroundColor: filteredData.map((d) => colorMap[d.region]),
-      },
-    ],
-  };
+        return {
+          vintage: row.Vintage,
+          price: row["Price_to_use"],
+          score: row.Score,
+          color
+        };
+      })
+      .sort((a, b) => a.vintage - b.vintage); // ensure ascending year
+  }, [wineData, selectedProduct, today]);
 
-  const options = {
-    scales: {
-      x: {
-        title: { display: true, text: "Wine" },
-      },
-      y: {
-        title: { display: true, text: "Price ($)" },
-      },
-    },
-    plugins: {
-      legend: { display: true },
-      tooltip: { enabled: true },
-    },
-  };
+  return (
+    <ResponsiveContainer width="100%" height={400}>
+      <ComposedChart data={filteredData}>
+        <CartesianGrid stroke="#f5f5f5" />
+        <XAxis dataKey="vintage" label={{ value: "Vintage", position: "insideBottom", offset: -5 }} />
+        <YAxis
+          yAxisId="left"
+          label={{ value: "Price (£)", angle: -90, position: "insideLeft" }}
+        />
+        <YAxis
+          yAxisId="right"
+          orientation="right"
+          label={{ value: "Score", angle: 90, position: "insideRight" }}
+        />
+        <Tooltip />
+        <Legend />
 
-  return <Bar data={chartData} options={options} />;
+        {/* Bar for price */}
+        <Bar
+          yAxisId="left"
+          dataKey="price"
+          name="Price"
+          barSize={20}
+          fill="#8884d8"
+          shape={(props) => {
+            const { fill, x, y, width, height, payload } = props;
+            return (
+              <rect
+                x={x}
+                y={y}
+                width={width}
+                height={height}
+                fill={payload.color}
+              />
+            );
+          }}
+        />
+
+        {/* Scatter for score */}
+        <Scatter
+          yAxisId="right"
+          dataKey="score"
+          name="Score"
+          fill="#000"
+          shape="circle"
+        />
+      </ComposedChart>
+    </ResponsiveContainer>
+  );
 };
 
 export default Graph2;
