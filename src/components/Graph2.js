@@ -1,102 +1,102 @@
 import React, { useMemo } from "react";
 import {
   ComposedChart,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
   Bar,
   Scatter,
+  XAxis,
+  YAxis,
   CartesianGrid,
-  ResponsiveContainer
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
 } from "recharts";
 
 const Graph2 = ({ wineData, selectedProduct }) => {
   const today = new Date();
 
-  // Filter only rows for the selected product
+  const getBarColor = (startYear, endYear) => {
+    const start = new Date(`${startYear}-01-01`);
+    const end = new Date(`${endYear}-12-31`);
+
+    if (today > end) {
+      // Red scale
+      const diffYears = (today - end) / (1000 * 60 * 60 * 24 * 365);
+      const intensity = Math.min(diffYears / 10, 1); // max dark after 10+ years past
+      return `rgb(${200 + intensity * 55}, 0, 0)`; // dark red
+    } else if (today < start) {
+      // Yellow scale
+      const diffYears = (start - today) / (1000 * 60 * 60 * 24 * 365);
+      const intensity = Math.min(diffYears / 10, 1);
+      return `rgb(255, ${255 - intensity * 55}, 0)`; // darker yellow
+    } else {
+      // Green scale
+      const total = (end - start) / (1000 * 60 * 60 * 24 * 365);
+      const progress = (today - start) / (1000 * 60 * 60 * 24 * 365);
+      const intensity = progress / total; // 0 = start, 1 = finish
+      return `rgb(0, ${150 + intensity * 105}, 0)`; // green gradient
+    }
+  };
+
   const filteredData = useMemo(() => {
     return wineData
-      .filter(row => row.Product === selectedProduct)
-      .map(row => {
-        const daStart = new Date(row["DA Start"], 0, 1); // year only
-        const daFinish = new Date(row["DA Finish"], 11, 31);
-
-        // Colour gradation logic
-        let color;
-        if (today > daFinish) {
-          const yearsPast = today.getFullYear() - daFinish.getFullYear();
-          const intensity = Math.min(1, yearsPast / 10); // cap at 10 years
-          color = `rgb(${Math.floor(150 + 105 * intensity)}, 0, 0)`; // dark to bright red
-        } else if (today < daStart) {
-          const yearsBefore = daStart.getFullYear() - today.getFullYear();
-          const intensity = Math.min(1, yearsBefore / 10);
-          color = `rgb(${Math.floor(255)}, ${Math.floor(255 * (1 - intensity))}, 0)`; // yellow shades
-        } else {
-          const totalWindow = daFinish.getFullYear() - daStart.getFullYear();
-          const yearsIntoWindow = today.getFullYear() - daStart.getFullYear();
-          const progress = yearsIntoWindow / totalWindow;
-          color = `rgb(0, ${Math.floor(150 + 105 * progress)}, 0)`; // light green to dark green
-        }
-
-        return {
-          vintage: row.Vintage,
-          price: row["Price_to_use"],
-          score: row.Score,
-          color
-        };
-      })
-      .sort((a, b) => a.vintage - b.vintage); // ensure ascending year
-  }, [wineData, selectedProduct, today]);
+      .filter((wine) => wine.Product === selectedProduct)
+      .map((wine) => ({
+        year: wine.Vintage,
+        price: wine.Price_to_use,
+        score: wine.Score,
+        daStart: wine["DA Start"],
+        daFinish: wine["DA Finish"],
+        fill: getBarColor(wine["DA Start"], wine["DA Finish"]),
+      }))
+      .sort((a, b) => a.year - b.year);
+  }, [wineData, selectedProduct]);
 
   return (
-    <ResponsiveContainer width="100%" height={400}>
-      <ComposedChart data={filteredData}>
-        <CartesianGrid stroke="#f5f5f5" />
-        <XAxis dataKey="vintage" label={{ value: "Vintage", position: "insideBottom", offset: -5 }} />
-        <YAxis
-          yAxisId="left"
-          label={{ value: "Price (£)", angle: -90, position: "insideLeft" }}
-        />
-        <YAxis
-          yAxisId="right"
-          orientation="right"
-          label={{ value: "Score", angle: 90, position: "insideRight" }}
-        />
-        <Tooltip />
-        <Legend />
-
-        {/* Bar for price */}
-        <Bar
-          yAxisId="left"
-          dataKey="price"
-          name="Price"
-          barSize={20}
-          fill="#8884d8"
-          shape={(props) => {
-            const { fill, x, y, width, height, payload } = props;
-            return (
-              <rect
-                x={x}
-                y={y}
-                width={width}
-                height={height}
-                fill={payload.color}
-              />
-            );
-          }}
-        />
-
-        {/* Scatter for score */}
-        <Scatter
-          yAxisId="right"
-          dataKey="score"
-          name="Score"
-          fill="#000"
-          shape="circle"
-        />
-      </ComposedChart>
-    </ResponsiveContainer>
+    <div style={{ width: "100%", height: 400 }}>
+      <ResponsiveContainer>
+        <ComposedChart data={filteredData}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="year" />
+          <YAxis
+            yAxisId="left"
+            orientation="left"
+            label={{
+              value: "Price",
+              angle: -90,
+              position: "insideLeft",
+            }}
+          />
+          <YAxis
+            yAxisId="right"
+            orientation="right"
+            label={{
+              value: "Score",
+              angle: -90,
+              position: "insideRight",
+            }}
+          />
+          <Tooltip />
+          <Legend />
+          <Bar
+            yAxisId="left"
+            dataKey="price"
+            name="Price"
+            fill="#8884d8"
+            isAnimationActive={false}
+          >
+            {filteredData.map((entry, index) => (
+              <cell key={`cell-${index}`} fill={entry.fill} />
+            ))}
+          </Bar>
+          <Scatter
+            yAxisId="right"
+            dataKey="score"
+            name="Score"
+            fill="#ff7300"
+          />
+        </ComposedChart>
+      </ResponsiveContainer>
+    </div>
   );
 };
 
