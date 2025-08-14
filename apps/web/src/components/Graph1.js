@@ -3,7 +3,7 @@ import {
   ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Line
 } from 'recharts';
 import calculateRegression from '../utils/regression';
-import wineData from '../utils/data';
+import { wineData, calculateRegression } from '../utils';
 
 const Graph1 = ({ selectedWine }) => {
   // Filter wine data for selected wine only
