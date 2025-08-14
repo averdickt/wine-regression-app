@@ -8,6 +8,7 @@ import {
   Legend,
   CartesianGrid,
 } from "recharts";
+import wineData from '../utils/data';
 
 const Graph4 = ({ data }) => {
   const todayYear = new Date().getFullYear();
