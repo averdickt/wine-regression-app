@@ -10,6 +10,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import wineData from '../utils/data';
 
 const Graph2 = ({ wineData, selectedProduct }) => {
   const today = new Date();
