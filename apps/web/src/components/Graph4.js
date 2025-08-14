@@ -2,7 +2,7 @@ import React from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell
 } from 'recharts';
-import wineData from '../utils/data';
+import { wineData, calculateRegression } from '../utils';
 
 const Graph4 = ({ selectedWine }) => {
   const today = new Date();
