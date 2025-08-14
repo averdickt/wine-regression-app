@@ -4,6 +4,7 @@ import {
   Line, Legend, ReferenceLine, ReferenceDot, Label
 } from "recharts";
 import { fitBestRegression } from "../utils/regression";
+import wineData from '../utils/data';
 
 export default function Graph1({ wineData, selectedProduct, selectedRegion, selectedScore }) {
   if (!wineData || wineData.length === 0) {
