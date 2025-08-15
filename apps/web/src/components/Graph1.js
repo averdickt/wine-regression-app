@@ -2,7 +2,7 @@ import React from 'react';
 import {
   ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Line
 } from 'recharts';
-import { wineData } from '../utils/data';
+import { wineData } from 'utils/data';
 import { filterWineData, calculateRegression } from '../utils/regression';
 
 const Graph1 = ({ selectedProduct }) => {
