@@ -1,6 +1,6 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
-import wineData from '../utils';
+import wineData from 'utils/data';
 
 export default function Graph3({ selectedProduct, selectedVintage, tickWineClass }) {
   if (!selectedProduct || !selectedVintage) {
