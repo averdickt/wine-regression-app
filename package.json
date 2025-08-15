@@ -1,1 +1,12 @@
-
+{
+  "name": "wine-regression-app",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace=web",
+    "dev": "npm run dev --workspace=web"
+  }
+}
