@@ -1,7 +1,7 @@
 import React from 'react';
 import { ComposedChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Scatter } from 'recharts';
 import wineData from 'utils/data';
-import { getBarColor } from '../utils/colors';
+import { getBarColor } from 'utils/colors';
 
 export default function Graph2({ selectedProduct, selectedVintage, tickWineClass }) {
   let filtered = wineData.filter(row => {
