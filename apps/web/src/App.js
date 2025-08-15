@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import wineData from './utils';
-import Graph1 from './components/Graph1';
-import Graph2 from './components/Graph2';
-import Graph3 from './components/Graph3';
-import Graph4 from './components/Graph4';
+import wineData from 'utils/data';
+import Graph1 from 'components/Graph1';
+import Graph2 from 'components/Graph2';
+import Graph3 from 'components/Graph3';
+import Graph4 from 'components/Graph4';
 
 export default function App() {
   const [selectedProduct, setSelectedProduct] = useState('');
