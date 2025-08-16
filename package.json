@@ -1,0 +1,7 @@
+{
+  "name": "wine-regression-app",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ]
+}
