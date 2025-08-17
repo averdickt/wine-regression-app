@@ -67,26 +67,7 @@ export default function Home() {
   return (
     <div style={{ padding: 20 }}>
       <h1>🍷 Wine Regression App</h1>
-      <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} />
-
-      {data.length > 0 && (
-        <ResponsiveContainer width="100%" height={500}>
-          <ScatterChart>
-            <CartesianGrid />
-            <XAxis dataKey="score" type="number" name="Score" />
-            <YAxis dataKey="price" type="number" name="Price (per bottle)" />
-            <Tooltip cursor={{ strokeDasharray: "3 3" }} />
-            <Scatter data={data} fill="#8884d8" />
-            <Line
-              type="linear"
-              dataKey="y"
-              data={regressionLine}
-              stroke="red"
-              dot={false}
-            />
-          </ScatterChart>
-        </ResponsiveContainer>
-      )}
+      <p>If you see this, rendering works.</p>
     </div>
   );
 }
