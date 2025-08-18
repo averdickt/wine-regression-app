@@ -29,7 +29,7 @@ export default function Home() {
 
     const parsedRows = json
       .filter((row) => {
-        if (row["Bottle_Condition"] !== "Pristine") {
+        if (row["Case Condition"] !== "Pristine") {
           console.log("⏭️ Skipping row (not pristine):", row);
           return false;
         }
