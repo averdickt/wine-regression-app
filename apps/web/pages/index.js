@@ -2,91 +2,121 @@ import React, { useState } from "react";
 import * as XLSX from "xlsx";
 import regression from "regression";
 import {
-  ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Line
+  ScatterChart,
+  Scatter,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Line
 } from "recharts";
 
 export default function Home() {
-  const [data, setData] = useState([]);
-  const [regressionLine, setRegressionLine] = useState([]);
+  const [rows, setRows] = useState([]);
+  const [regLine, setRegLine] = useState([]);
 
-  // Handle file upload
-  const handleFileUpload = (event) => {
+  const handleFileUpload = async (event) => {
     const file = event.target.files[0];
-    const reader = new FileReader();
+    if (!file) return;
 
-    reader.onload = (e) => {
-      const workbook = XLSX.read(e.target.result, { type: "binary" });
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
-      const rows = XLSX.utils.sheet_to_json(sheet);
+    const data = await file.arrayBuffer();
+    const workbook = XLSX.read(data);
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    const json = XLSX.utils.sheet_to_json(worksheet);
 
-      // Clean + transform rows
-      let cleaned = [];
-      rows.forEach((row) => {
-        if (row["bottle condition"] !== "Pristine") return;
+    console.log("📊 Raw rows from Excel:", json.length);
 
-        // only 75cl cases
-        if (!row["case description"]?.endsWith("75cl")) return;
+    const parsedRows = json
+      .filter((row) => {
+        if (row["Bottle_Condition"] !== "Pristine") {
+          console.log("⏭️ Skipping row (not pristine):", row);
+          return false;
+        }
+        return true;
+      })
+      .map((row) => {
+        const match = row["Case_Format"]
+          ? row["Case_Format"].match(/(\d+)\s*x\s*75cl/i)
+          : null;
+        const bottles = match ? parseInt(match[1]) : 1;
 
-        // price calculation
         let price = null;
-        if (row["bid per case"] && row["offer per case"]) {
-          price = (row["bid per case"] + row["offer per case"]) / 2;
-        } else if (row["last trade price"]) {
-          price = row["last trade price"];
+        if (row["Bid_Per_Case"] && row["Offer_Per_Case"]) {
+          price =
+            (Number(row["Bid_Per_Case"]) + Number(row["Offer_Per_Case"])) / 2;
+        } else if (row["Last_Trade_Price"]) {
+          price = Number(row["Last_Trade_Price"]);
         }
-        if (!price) return;
 
-        const numBottles = parseInt(row["case description"]);
-        const pricePerBottle = price / numBottles;
-
-        if (row["Scores"] && !isNaN(row["Scores"])) {
-          cleaned.push({
-            x: Number(row["Scores"]), // independent variable
-            y: pricePerBottle, // dependent variable
-            wine: row["product"],
-            vintage: row["vintage"]
-          });
+        if (!price) {
+          console.log("⏭️ Skipping row (no valid price):", row);
+          return null;
         }
-      });
 
-      setData(cleaned);
+        if (!row["Score"]) {
+          console.log("⏭️ Skipping row (missing score):", row);
+          return null;
+        }
 
-      // Run regression
-      if (cleaned.length > 1) {
-        const result = regression.linear(cleaned.map(d => [d.x, d.y]));
-        const line = [
-          { x: Math.min(...cleaned.map(d => d.x)), y: result.predict(Math.min(...cleaned.map(d => d.x)))[1] },
-          { x: Math.max(...cleaned.map(d => d.x)), y: result.predict(Math.max(...cleaned.map(d => d.x)))[1] }
-        ];
-        setRegressionLine(line);
-      }
-    };
+        return {
+          product: row["Product"],
+          vintage: Number(row["Vintage"]),
+          score: Number(row["Score"]),
+          pricePerBottle: price / bottles,
+        };
+      })
+      .filter((r) => r !== null);
 
-    reader.readAsBinaryString(file);
+    console.log(`✅ Parsed ${parsedRows.length} valid rows`);
+
+    setRows(parsedRows);
+
+    if (parsedRows.length > 1) {
+      const result = regression.linear(
+        parsedRows.map((r) => [r.score, r.pricePerBottle])
+      );
+      const regPoints = parsedRows.map((r) => ({
+        x: r.score,
+        y: result.predict(r.score)[1],
+      }));
+      setRegLine(regPoints);
+    }
   };
 
   return (
-    <div style={{ padding: 20 }}>
-      <h1>Wine Regression App</h1>
-      <input type="file" accept=".xlsx" onChange={handleFileUpload} />
+    <div style={{ padding: "20px" }}>
+      <h1>📈 Wine Regression Chart</h1>
+      <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} />
 
-      {data.length > 0 && (
-        <ScatterChart width={800} height={500}>
+      {rows.length > 0 && (
+        <ScatterChart
+          width={800}
+          height={500}
+          margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+        >
           <CartesianGrid />
-          <XAxis dataKey="x" name="Score" />
-          <YAxis dataKey="y" name="Price (£ per bottle)" />
+          <XAxis
+            type="number"
+            dataKey="score"
+            name="Score"
+            domain={["auto", "auto"]}
+          />
+          <YAxis
+            type="number"
+            dataKey="pricePerBottle"
+            name="Price (£)"
+            domain={["auto", "auto"]}
+          />
           <Tooltip cursor={{ strokeDasharray: "3 3" }} />
-          <Scatter name="Wines" data={data} fill="#8884d8" />
-          {regressionLine.length > 0 && (
-            <Line
-              type="linear"
-              dataKey="y"
-              data={regressionLine}
-              stroke="#ff7300"
-              dot={false}
-            />
-          )}
+          <Scatter name="Wines" data={rows} fill="#8884d8" />
+          <Line
+            type="linear"
+            dataKey="y"
+            data={regLine}
+            dot={false}
+            stroke="red"
+          />
         </ScatterChart>
       )}
     </div>
