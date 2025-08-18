@@ -1,19 +1,17 @@
-import regression from 'regression';
+import regression from "regression";
 
-/**
- * Filters dataset according to your rules:
- * - bottleCondition === 'Pristine'
- * - caseDescription ends in '75cl'
- * - Price = midpoint of bid/offer if both exist, else lastTradePrice, else ignore
- */
-export function filterWineData(data) {
+export function filterWineData(data, perBottle = true) {
   return data
-    .filter(row => row.Case_Condition === 'Pristine' && /75cl$/.test(row.Case_Format))
-    .map(row => {
+    .filter(
+      (row) =>
+        row.Case_Condition === "Pristine" &&
+        /75cl$/.test(row["case description"])
+    )
+    .map((row) => {
       let price = null;
-      const bid = parseFloat(row.Bid_Per_Case);
-      const offer = parseFloat(row.Offer_Per_Case);
-      const lastTrade = parseFloat(row.Last_Trade_Price);
+      const bid = parseFloat(row["bid per case"]);
+      const offer = parseFloat(row["offer per case"]);
+      const lastTrade = parseFloat(row["last trade price"]);
 
       if (!isNaN(bid) && !isNaN(offer)) {
         price = (bid + offer) / 2;
@@ -21,36 +19,30 @@ export function filterWineData(data) {
         price = lastTrade;
       }
 
-      // Extract bottle count from case description (e.g., "6x75cl" → 6)
-      const bottleCount = parseInt(row.Case_Format.split('x')[0], 10);
-      if (price && bottleCount > 0) {
-        price = price / bottleCount;
+      // Extract bottle count
+      const caseDesc = row["case description"];
+      const bottleCount = parseInt(caseDesc.split("x")[0], 10);
+
+      if (price && perBottle && bottleCount > 0) {
+        price = price / bottleCount; // per bottle
       }
 
       return {
-        ...row,
-        price
+        score: parseFloat(row.Scores),
+        price,
       };
     })
-    .filter(row => row.price !== null && !isNaN(row.price));
+    .filter((row) => row.price !== null && !isNaN(row.price));
 }
 
-/**
- * Generates regression results for Score → Price
- * Returns:
- * - equation: [slope, intercept]
- * - r2: R² value
- * - points: predicted line points for charting
- */
 export function calculateRegression(data) {
   if (!data || data.length === 0) return null;
 
-  const regressionData = data.map(d => [parseFloat(d.score), parseFloat(d.price)]);
-
+  const regressionData = data.map((d) => [d.score, d.price]);
   const result = regression.linear(regressionData, { precision: 4 });
 
   const linePoints = [];
-  const scores = regressionData.map(d => d[0]);
+  const scores = regressionData.map((d) => d[0]);
   const minScore = Math.min(...scores);
   const maxScore = Math.max(...scores);
 
@@ -62,6 +54,6 @@ export function calculateRegression(data) {
   return {
     equation: result.equation,
     r2: result.r2,
-    points: linePoints
+    points: linePoints,
   };
 }
