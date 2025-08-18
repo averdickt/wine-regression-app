@@ -8,12 +8,12 @@ import regression from 'regression';
  */
 export function filterWineData(data) {
   return data
-    .filter(row => row.bottleCondition === 'Pristine' && /75cl$/.test(row.caseDescription))
+    .filter(row => row.Case Condition === 'Pristine' && /75cl$/.test(row.caseDescription))
     .map(row => {
       let price = null;
-      const bid = parseFloat(row.bidPerCase);
-      const offer = parseFloat(row.offerPerCase);
-      const lastTrade = parseFloat(row.lastTradePrice);
+      const bid = parseFloat(row.Bid_Per_Case);
+      const offer = parseFloat(row.Offer_Per_Case);
+      const lastTrade = parseFloat(row.Last_Trade_Price);
 
       if (!isNaN(bid) && !isNaN(offer)) {
         price = (bid + offer) / 2;
@@ -22,7 +22,7 @@ export function filterWineData(data) {
       }
 
       // Extract bottle count from case description (e.g., "6x75cl" → 6)
-      const bottleCount = parseInt(row.caseDescription.split('x')[0], 10);
+      const bottleCount = parseInt(row.Case_Format.split('x')[0], 10);
       if (price && bottleCount > 0) {
         price = price / bottleCount;
       }
