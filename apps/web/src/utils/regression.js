@@ -8,7 +8,7 @@ import regression from 'regression';
  */
 export function filterWineData(data) {
   return data
-    .filter(row => row.Case Condition === 'Pristine' && /75cl$/.test(row.Case_Format))
+    .filter(row => row.Case_Condition === 'Pristine' && /75cl$/.test(row.Case_Format))
     .map(row => {
       let price = null;
       const bid = parseFloat(row.Bid_Per_Case);
