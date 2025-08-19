@@ -10,8 +10,7 @@ import {
   Line,
   ResponsiveContainer,
 } from "recharts";
-import { filterWineData, calculateRegression } from "../regression";
-
+import { filterWineData, calculateRegression } from "../lib/regression";
 export default function Home() {
   const [data, setData] = useState([]);
   const [regressionResult, setRegressionResult] = useState(null);
