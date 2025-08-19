@@ -45,18 +45,18 @@ export default function Home() {
       const parsed = rows
         .filter((row) => row.Case_Condition === "Pristine")
         .map((row) => {
-          const caseDesc = row["Case Description"] || "";
+          const caseDesc = row["Case_Format"] || "";
           const match = caseDesc.match(/^(\d+)/);
           const bottles = match ? parseInt(match[1], 10) : null;
 
           let pricePerCase = null;
-          if (row["Bid per case"] && row["Offer per case"]) {
+          if (row["Bid_Per_Case"] && row["Offer_Per_Case"]) {
             pricePerCase =
-              (parseFloat(row["Bid per case"]) +
-                parseFloat(row["Offer per case"])) /
+              (parseFloat(row["Bid_Per_Case"]) +
+                parseFloat(row["Offer_Per_Case"])) /
               2;
-          } else if (row["Last Trade Price"]) {
-            pricePerCase = parseFloat(row["Last Trade Price"]);
+          } else if (row["Last_Trade_Price"]) {
+            pricePerCase = parseFloat(row["Last_Trade_Price"]);
           }
 
           if (!pricePerCase || !bottles) return null;
