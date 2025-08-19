@@ -5,13 +5,13 @@ export function filterWineData(data, perBottle = true) {
     .filter(
       (row) =>
         row.Case_Condition === "Pristine" &&
-        /75cl$/.test(row["case description"])
+        /75cl$/.test(row["Case_Format"])
     )
     .map((row) => {
       let price = null;
-      const bid = parseFloat(row["bid per case"]);
-      const offer = parseFloat(row["offer per case"]);
-      const lastTrade = parseFloat(row["last trade price"]);
+      const bid = parseFloat(row["Bid_Per_Case"]);
+      const offer = parseFloat(row["Offer_Per_Case"]);
+      const lastTrade = parseFloat(row["Last_Trade_Price"]);
 
       if (!isNaN(bid) && !isNaN(offer)) {
         price = (bid + offer) / 2;
@@ -20,7 +20,7 @@ export function filterWineData(data, perBottle = true) {
       }
 
       // Extract bottle count
-      const caseDesc = row["case description"];
+      const caseDesc = row["Case_Format"];
       const bottleCount = parseInt(caseDesc.split("x")[0], 10);
 
       if (price && perBottle && bottleCount > 0) {
@@ -28,7 +28,7 @@ export function filterWineData(data, perBottle = true) {
       }
 
       return {
-        score: parseFloat(row.Scores),
+        score: parseFloat(row.Score),
         price,
       };
     })
