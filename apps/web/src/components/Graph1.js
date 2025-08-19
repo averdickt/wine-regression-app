@@ -1,84 +1,51 @@
-import React, { useState, useMemo } from 'react';
+// apps/web/components/Graph1.js
+import React from 'react';
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Scatter
+  ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Line
 } from 'recharts';
 
-export default function RegressionChart({ data, regressionPerBottle, regressionPerCase }) {
-  const [view, setView] = useState("perBottle"); // toggle state
+export default function Graph1({ data, regression }) {
+  if (!data || data.length === 0 || !regression) {
+    return <p>No data to display.</p>;
+  }
 
-  // Choose dataset depending on toggle
-  const { dataForChart, regression } = useMemo(() => {
-    if (view === "perCase") {
-      return { dataForChart: data.map(d => ({ ...d, price: d.priceCase })), regression: regressionPerCase };
-    } else {
-      return { dataForChart: data.map(d => ({ ...d, price: d.priceBottle })), regression: regressionPerBottle };
-    }
-  }, [view, data, regressionPerBottle, regressionPerCase]);
-
-  if (!dataForChart || dataForChart.length === 0) return <p>No data available</p>;
-  if (!regression) return <p>Regression not calculated</p>;
-
-  // Compute axis bounds
-  const scores = dataForChart.map(d => parseFloat(d.score));
-  const prices = dataForChart.map(d => parseFloat(d.price));
-
-  const minScore = Math.min(...scores);
-  const maxScore = Math.max(...scores);
-  const maxPrice = Math.max(...prices);
+  // get min score from dataset
+  const minScore = Math.min(...data.map(d => parseFloat(d.score)));
+  const xMin = Math.max(minScore - 3, 0); // never below 0
 
   return (
-    <div>
-      {/* Toggle */}
-      <div style={{ marginBottom: '10px' }}>
-        <button
-          onClick={() => setView("perBottle")}
-          style={{ marginRight: "10px", background: view === "perBottle" ? "#ddd" : "#fff" }}
-        >
-          Per Bottle
-        </button>
-        <button
-          onClick={() => setView("perCase")}
-          style={{ background: view === "perCase" ? "#ddd" : "#fff" }}
-        >
-          Per Case
-        </button>
-      </div>
+    <ScatterChart
+      width={800}
+      height={500}
+      margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+    >
+      <CartesianGrid />
+      <XAxis
+        type="number"
+        dataKey="score"
+        name="Score"
+        domain={[xMin, 'dataMax']}
+      />
+      <YAxis
+        type="number"
+        dataKey="price"
+        name="Price"
+      />
+      <Tooltip cursor={{ strokeDasharray: '3 3' }} />
+      <Legend />
 
-      {/* Chart */}
-      <LineChart
-        width={900}
-        height={500}
-        margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
-      >
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis
-          dataKey="score"
-          type="number"
-          domain={[Math.floor(minScore) - 3, Math.ceil(maxScore)]}
-          label={{ value: "Score", position: "insideBottom", offset: -5 }}
-        />
-        <YAxis
-          type="number"
-          domain={[0, Math.ceil(maxPrice * 1.1)]}
-          label={{ value: `Price (${view === "perBottle" ? "per bottle" : "per case"})`, angle: -90, position: "insideLeft" }}
-        />
-        <Tooltip />
-        <Legend />
+      {/* Scatter points */}
+      <Scatter name="Wine Data" data={data} fill="#8884d8" />
 
-        {/* Scatter points */}
-        <Scatter name="Wine Data" data={dataForChart} fill="blue" />
-
-        {/* Regression line */}
-        <Line
-          name={`Regression (R²=${regression.r2.toFixed(2)})`}
-          data={regression.points}
-          type="linear"
-          dataKey="price"
-          stroke="red"
-          dot={false}
-          isAnimationActive={false}
-        />
-      </LineChart>
-    </div>
+      {/* Regression line */}
+      <Line
+        type="monotone"
+        dataKey="price"
+        data={regression.points}
+        stroke="#ff7300"
+        dot={false}
+        name="Regression Line"
+      />
+    </ScatterChart>
   );
 }
