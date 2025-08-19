@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import * as XLSX from 'xlsx';
 import { filterWineData, calculateRegression } from '../lib/regression';
-import Graph1 from '../components/Graph1';
+import Graph1 from '/components/Graph1';
 
 export default function Home() {
   const [wineData, setWineData] = useState([]);
