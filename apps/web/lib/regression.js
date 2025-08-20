@@ -17,17 +17,17 @@ export function parseExcel(file, usePerBottle = false) {
         .map((row) => {
           let price = null;
 
-          if (row["Bid per case"] && row["Offer per case"]) {
-            price = (row["Bid per case"] + row["Offer per case"]) / 2;
-          } else if (row["Last Trade Price"]) {
-            price = row["Last Trade Price"];
+          if (row["Bid_Per_Case"] && row["Offer_Per_Case"]) {
+            price = (row["Bid_Per_Case"] + row["Offer_Per_Case"]) / 2;
+          } else if (row["Last_Trade_Price"]) {
+            price = row["Last_Trade_Price"];
           }
 
           if (!price) return null;
 
           let pricePerBottle = null;
-          if (usePerBottle && row["Case Description"]) {
-            const match = row["Case Description"].match(/^(\d+)\s*x/i);
+          if (usePerBottle && row["Case_Format"]) {
+            const match = row["Case_Format"].match(/^(\d+)\s*x/i);
             if (match) {
               const bottles = parseInt(match[1], 10);
               if (bottles > 0) {
@@ -38,7 +38,7 @@ export function parseExcel(file, usePerBottle = false) {
 
           return {
             ...row,
-            Score: parseFloat(row.Scores),
+            Score: parseFloat(row.Score),
             Price: usePerBottle ? pricePerBottle : price,
             Region: row.Region,
             Wine_Class: row.Wine_Class,
