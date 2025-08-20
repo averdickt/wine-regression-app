@@ -1,51 +1,42 @@
 import {
-  ScatterChart,
-  Scatter,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Line,
-  ResponsiveContainer,
+  ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Line, ResponsiveContainer
 } from "recharts";
 
-export default function Graph1({ data, regression, mode }) {
-  if (!data || data.length === 0) return null;
+export default function Graph1({ data, regression, mode, regressionScope }) {
+  if (!data || data.length === 0) return <p>No data loaded</p>;
 
-  // find min/max score from data
-  const scores = data.map((d) => d.Score);
-  const minScore = Math.min(...scores);
-  const maxScore = Math.max(...scores);
+  // pick axis field depending on perCase/perBottle toggle
+  const priceField = mode === "perCase" ? "PricePerCase" : "PricePerBottle";
 
-  // extend regression line across domain
-  let regressionLine = [];
-  if (regression) {
-    const [slope, intercept] = regression.equation;
-    regressionLine = [
-      {
-        Score: minScore - 3,
-        price: slope * (minScore - 3) + intercept,
-      },
-      {
-        Score: maxScore + 3,
-        price: slope * (maxScore + 3) + intercept,
-      },
-    ];
-  }
+  const minScore = Math.min(...data.map(d => d.Score));
+  const maxScore = Math.max(...data.map(d => d.Score));
+
+  const regressionLine =
+    regression && regression.equation
+      ? [
+          { Score: minScore - 3, [priceField]: regression.predict(minScore - 3) },
+          { Score: maxScore + 3, [priceField]: regression.predict(maxScore + 3) },
+        ]
+      : [];
+
+  // choose line color depending on scope
+  let lineColor = "black";
+  if (regressionScope === "Region") lineColor = "red";
+  if (regressionScope === "Wine_Class") lineColor = "blue";
 
   return (
-    <ResponsiveContainer width="100%" height={400}>
+    <ResponsiveContainer width="100%" height={500}>
       <ScatterChart>
         <CartesianGrid />
         <XAxis
-          type="number"
           dataKey="Score"
+          type="number"
           domain={[minScore - 3, maxScore + 3]}
           label={{ value: "Score", position: "insideBottom", offset: -5 }}
         />
         <YAxis
+          dataKey={priceField}
           type="number"
-          dataKey={mode === "perCase" ? "pricePerCase" : "pricePerBottle"}
           label={{
             value: mode === "perCase" ? "Price per Case" : "Price per Bottle",
             angle: -90,
@@ -53,24 +44,14 @@ export default function Graph1({ data, regression, mode }) {
           }}
         />
         <Tooltip cursor={{ strokeDasharray: "3 3" }} />
-
-        {/* scatter points */}
-        <Scatter
-          data={data}
-          fill="#8884d8"
-          shape="circle"
-          name="Wines"
-        />
-
-        {/* regression line */}
-        {regression && (
+        <Scatter data={data} fill="#8884d8" />
+        {regressionLine.length > 0 && (
           <Line
             type="linear"
-            dataKey="price"
             data={regressionLine}
-            stroke="#ff7300"
+            dataKey={priceField}
+            stroke={lineColor}
             dot={false}
-            name="Regression Line"
           />
         )}
       </ScatterChart>
