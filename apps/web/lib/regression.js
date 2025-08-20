@@ -50,6 +50,7 @@ export function parseExcel(file, perBottle = false) {
         })
         .filter((r) => r && !isNaN(r.Score) && !isNaN(r.Price));
 
+console.log("Headers from first row:", Object.keys(rows[0]));
       console.log("Sample parsed rows:");
 parsed.slice(0, 5).forEach((r, i) => {
   console.log(`Row ${i + 1}: Score=${r.Score}, Price=${r.Price}, Case_Format=${r.Case_Format}`);
