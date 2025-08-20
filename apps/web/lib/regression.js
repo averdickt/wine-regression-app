@@ -40,13 +40,13 @@ export function parseExcel(file, perBottle = false) {
           const pricePerBottle = price / bottles;
 
           return {
-            Score: parseFloat(row["Score"]),
-            Price: perBottle ? pricePerBottle : price,
-            Region: row["Region"] || "",
-            Wine_Class: row["Wine_Class"] || "",
-            Product: row["Product"] || "",
-            Vintage: row["Vintage"] || "",
-          };
+  Score: row["Score"] ? parseFloat(String(row["Score"]).replace(/[^\d.]/g, "")) : NaN,
+  Price: perBottle ? pricePerBottle : price,
+  Region: row["Region"] || "",
+  Wine_Class: row["Wine_Class"] || "",
+  Product: row["Product"] || "",
+  Vintage: row["Vintage"] || "",
+};
         })
         .filter((r) => r && !isNaN(r.Score) && !isNaN(r.Price));
 
