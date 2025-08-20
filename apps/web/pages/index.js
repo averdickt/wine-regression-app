@@ -136,7 +136,7 @@ export default function Home() {
         )}
       </div>
 
-      <Graph1 data={filteredRows} regression={regression} mode={mode} />
+      <Graph1 data={filteredRows} regression={regression} mode={mode} regressionScope={regressionScope} />
     </div>
   );
 }
