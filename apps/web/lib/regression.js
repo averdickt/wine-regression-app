@@ -68,6 +68,8 @@ export function runRegression(rows) {
     .map((r) => [r.Score, r.Price])
     .filter((point) => !isNaN(point[0]) && !isNaN(point[1]));
 
+  console.log("Regression input data count:", data.length);
+
   if (data.length === 0) {
     console.warn("No valid numeric data for regression");
     return null;
