@@ -50,7 +50,7 @@ export function parseExcel(file, perBottle = false) {
         })
         .filter((r) => r && !isNaN(r.Score) && !isNaN(r.Price));
 
-      console.log("Parsed rows:", parsed.length);
+      console.log("Parsed rows:", parsed.slice(0, 5));
       resolve(parsed);
     };
     reader.onerror = reject;
