@@ -1,60 +1,68 @@
+import React, { useState, useMemo } from 'react';
 import {
-  ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Line, ResponsiveContainer
-} from "recharts";
+  ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Line
+} from 'recharts';
 
-export default function Graph1({ data, regression, mode, regressionScope }) {
-  if (!data || data.length === 0) return <p>No data loaded</p>;
+const Graph1 = ({ data }) => {
+  const [selectedProduct, setSelectedProduct] = useState('');
 
-  // pick axis field depending on perCase/perBottle toggle
-  const priceField = mode === "perCase" ? "PricePerCase" : "PricePerBottle";
+  // Unique product list
+  const products = useMemo(() => {
+    return [...new Set(data.map(d => d.product))].sort();
+  }, [data]);
 
-  const minScore = Math.min(...data.map(d => d.Score));
-  const maxScore = Math.max(...data.map(d => d.Score));
-
-  const regressionLine =
-    regression && regression.equation
-      ? [
-          { Score: minScore - 3, [priceField]: regression.predict(minScore - 3) },
-          { Score: maxScore + 3, [priceField]: regression.predict(maxScore + 3) },
-        ]
-      : [];
-
-  // choose line color depending on scope
-  let lineColor = "black";
-  if (regressionScope === "Region") lineColor = "red";
-  if (regressionScope === "Wine_Class") lineColor = "blue";
+  // Filtered data for selected product
+  const filteredData = useMemo(() => {
+    if (!selectedProduct) return [];
+    return data.filter(d => d.product === selectedProduct);
+  }, [data, selectedProduct]);
 
   return (
-    <ResponsiveContainer width="100%" height={500}>
-      <ScatterChart>
-        <CartesianGrid />
-        <XAxis
-          dataKey="Score"
-          type="number"
-          domain={[minScore - 3, maxScore + 3]}
-          label={{ value: "Score", position: "insideBottom", offset: -5 }}
-        />
-        <YAxis
-          dataKey={priceField}
-          type="number"
-          label={{
-            value: mode === "perCase" ? "Price per Case" : "Price per Bottle",
-            angle: -90,
-            position: "insideLeft",
-          }}
-        />
-        <Tooltip cursor={{ strokeDasharray: "3 3" }} />
-        <Scatter data={data} fill="#8884d8" />
-        {regressionLine.length > 0 && (
-          <Line
-            type="linear"
-            data={regressionLine}
-            dataKey={priceField}
-            stroke={lineColor}
-            dot={false}
-          />
-        )}
-      </ScatterChart>
-    </ResponsiveContainer>
+    <div>
+      <h3>Price vs Score Scatter (Per Bottle)</h3>
+      <label>
+        Select Product:{" "}
+        <select
+          value={selectedProduct}
+          onChange={(e) => setSelectedProduct(e.target.value)}
+        >
+          <option value="">-- Choose a product --</option>
+          {products.map((prod, idx) => (
+            <option key={idx} value={prod}>
+              {prod}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      {selectedProduct && (
+        <ResponsiveContainer width="100%" height={400}>
+          <ScatterChart>
+            <CartesianGrid />
+            <XAxis dataKey="score" name="Score" />
+            <YAxis dataKey="price" name="Price (£ per bottle)" />
+            <Tooltip cursor={{ strokeDasharray: '3 3' }} />
+            <Legend />
+
+            <Scatter
+              name={selectedProduct}
+              data={filteredData}
+              fill="#8884d8"
+            />
+
+            {/* Optional regression line if you calculate it separately */}
+            <Line
+              type="monotone"
+              dataKey="regression"
+              data={filteredData}
+              stroke="#82ca9d"
+              dot={false}
+            />
+          </ScatterChart>
+        </ResponsiveContainer>
+      )}
+    </div>
   );
-}
+};
+
+export default Graph1;
