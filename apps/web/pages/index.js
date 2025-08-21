@@ -1,142 +1,95 @@
-import { useState } from "react";
-import Graph1 from "../src/components/Graph1";
-import { parseExcel, runRegression } from "../lib/regression";
+import React, { useState } from 'react';
+import * as XLSX from 'xlsx';
+import Graph1 from './src/components/Graph1';
+import RegressionChart from './lib/RegressionChart';
 
-export default function Home() {
-  const [rows, setRows] = useState([]);
-  const [regression, setRegression] = useState(null);
-  const [mode, setMode] = useState("perCase");
+// --- Helpers ---
+const extractBottleCount = (format) => {
+  const match = format?.match(/^(\d+)\s*x/i);
+  return match ? parseInt(match[1], 10) : null;
+};
 
-  const [selectedWine, setSelectedWine] = useState("All");
-  const [regressionScope, setRegressionScope] = useState("All"); // All | Region | Wine_Class
-  const [selectedRegions, setSelectedRegions] = useState([]);
-  const [selectedClasses, setSelectedClasses] = useState([]);
+const parsePricePerBottle = (row) => {
+  const bid = parseFloat(row['Bid_Per_Case']);
+  const offer = parseFloat(row['Offer_Per_Case']);
+  const lastTrade = parseFloat(row['Last_Trade_Price']);
+  const bottles = extractBottleCount(row['Case_Format']);
 
-  const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const { parsedRows } = await parseExcel(file);
-    setRows(parsedRows);
-    setRegression(runRegression(parsedRows, mode)); // default regression = All wines
-  };
+  if (!bottles) return null;
 
-  // lists for dropdowns
-  const wines = ["All", ...Array.from(new Set(rows.map(r => r.Product)))];
-  const regions = Array.from(new Set(rows.map(r => r.Region)));
-  const classes = Array.from(new Set(rows.map(r => r.Wine_Class)));
-
-  // scatter points (filter by selected wine)
-  const filteredRows = selectedWine === "All"
-    ? rows
-    : rows.filter(r => r.Product === selectedWine);
-
-  // regression dataset (depends on scope)
-  let regressionRows = rows;
-  if (regressionScope === "Region" && selectedRegions.length > 0) {
-    regressionRows = rows.filter(r => selectedRegions.includes(r.Region));
-  }
-  if (regressionScope === "Wine_Class" && selectedClasses.length > 0) {
-    regressionRows = rows.filter(r => selectedClasses.includes(r.Wine_Class));
+  let perCase = null;
+  if (!isNaN(bid) && !isNaN(offer)) {
+    perCase = (bid + offer) / 2;
+  } else if (!isNaN(lastTrade)) {
+    perCase = lastTrade;
   }
 
-  const updateRegression = () => {
-    setRegression(runRegression(regressionRows, mode));
+  if (!perCase) return null;
+
+  return perCase / bottles; // normalize to per bottle
+};
+
+const isValidRow = (row) => {
+  return (
+    row['Bottle_Condition']?.toLowerCase() === 'pristine' &&
+    typeof row['Case_Format'] === 'string' &&
+    row['Case_Format'].trim().toLowerCase().includes('75cl')
+  );
+};
+
+function App() {
+  const [data, setData] = useState([]);
+
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      const binaryStr = e.target.result;
+      const workbook = XLSX.read(binaryStr, { type: 'binary' });
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(worksheet);
+
+      const cleaned = rows
+        .filter(isValidRow)
+        .map((row) => {
+          const price = parsePricePerBottle(row);
+          const score = parseFloat(row['Score']);
+          const vintage = parseInt(row['Vintage'], 10);
+          const product = row['Product'];
+
+          if (!price || isNaN(score) || isNaN(vintage)) return null;
+
+          return {
+            vintage,
+            price,   // per bottle
+            score,
+            product,
+          };
+        })
+        .filter(Boolean);
+
+      setData(cleaned);
+
+      console.log("Cleaned data:", cleaned);
+    };
+
+    reader.readAsBinaryString(file);
   };
 
   return (
     <div>
-      <h1>Wine Regression App</h1>
+      <h2>Wine Regression App</h2>
       <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} />
 
-      {/* toggle perCase/perBottle */}
-      <div>
-        <label>
-          <input
-            type="radio"
-            checked={mode === "perCase"}
-            onChange={() => { setMode("perCase"); updateRegression(); }}
-          />
-          Per Case
-        </label>
-        <label>
-          <input
-            type="radio"
-            checked={mode === "perBottle"}
-            onChange={() => { setMode("perBottle"); updateRegression(); }}
-          />
-          Per Bottle
-        </label>
-      </div>
-
-      {/* wine dropdown (scatter filter only) */}
-      <div>
-        <label>
-          Select wine:{" "}
-          <select
-            value={selectedWine}
-            onChange={(e) => setSelectedWine(e.target.value)}
-          >
-            {wines.map((wine) => (
-              <option key={wine} value={wine}>
-                {wine}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-
-      {/* regression scope */}
-      <div>
-        <label>
-          Regression Scope:{" "}
-          <select
-            value={regressionScope}
-            onChange={(e) => { setRegressionScope(e.target.value); updateRegression(); }}
-          >
-            <option value="All">All Wines</option>
-            <option value="Region">By Region</option>
-            <option value="Wine_Class">By Wine Class</option>
-          </select>
-        </label>
-
-        {regressionScope === "Region" && (
-          <select
-            multiple
-            value={selectedRegions}
-            onChange={(e) => {
-              const selected = Array.from(e.target.selectedOptions, o => o.value);
-              setSelectedRegions(selected);
-              updateRegression();
-            }}
-          >
-            {regions.map((region) => (
-              <option key={region} value={region}>
-                {region}
-              </option>
-            ))}
-          </select>
-        )}
-
-        {regressionScope === "Wine_Class" && (
-          <select
-            multiple
-            value={selectedClasses}
-            onChange={(e) => {
-              const selected = Array.from(e.target.selectedOptions, o => o.value);
-              setSelectedClasses(selected);
-              updateRegression();
-            }}
-          >
-            {classes.map((cls) => (
-              <option key={cls} value={cls}>
-                {cls}
-              </option>
-            ))}
-          </select>
-        )}
-      </div>
-
-      <Graph1 data={filteredRows} regression={regression} mode={mode} regressionScope={regressionScope} />
+      {data.length > 0 && (
+        <>
+          <Graph1 data={data} />
+          <RegressionChart data={data} />
+        </>
+      )}
     </div>
   );
 }
+
+export default App;
