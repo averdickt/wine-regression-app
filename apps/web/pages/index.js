@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import * as XLSX from 'xlsx';
-import Graph1 from './src/components/Graph1';
-import RegressionChart from './lib/RegressionChart';
+import Graph1 from '../src/components/Graph1';
+import RegressionChart from '../lib/RegressionChart';
 
 // --- Helpers ---
 const extractBottleCount = (format) => {
