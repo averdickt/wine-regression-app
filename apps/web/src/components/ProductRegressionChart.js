@@ -22,7 +22,7 @@ export default function ProductRegressionChart({ data, highlightVintage }) {
     const y = reg.predict(x)[1];
     linePoints.push({ x, y });
   }
-  console.log("Regression line points:" linepoints);
+  console.log("Regression line points:", linepoints);
   return (
     <ScatterChart width={600} height={400}>
       <CartesianGrid />
