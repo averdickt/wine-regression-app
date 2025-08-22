@@ -10,5 +10,9 @@ export default function AutocompleteBox({ options, value, onChange }) {
       placeholder="Select product..."
       style={{ width: "300px", padding: "6px" }}
     />
-  );
+<datalist id="product-options">
+      {options.map((opt) => (
+        <option key={opt} value={opt} />
+  ))
+      </datalist>;
 }
