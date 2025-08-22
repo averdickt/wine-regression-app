@@ -1,35 +1,51 @@
 import React from "react";
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Scatter
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Scatter,
 } from "recharts";
 import { bestFitRegression } from "../lib/Regression";
 
 export default function ProductRegressionChart({ data, highlightVintage }) {
   if (!data || data.length === 0) return null;
 
-  const formattedData = data.map(d => ({ x: d.Score, y: d.Price, vintage: d.Vintage }));
+  const formattedData = data.map((d) => ({
+    x: Number(d.Score),     // ensure numeric
+    y: Number(d.Price),     // ensure numeric
+    vintage: d.Vintage,
+  }));
 
-  // Regression calculation
-  const reg = bestFitRegression(formattedData.map(d => [d.x, d.y]));
+  // Calculate regression
+  const reg = bestFitRegression(formattedData.map((d) => [d.x, d.y]));
 
-  // Generate smooth line across the domain
-  const xMin = Math.min(...formattedData.map(d => d.x)) - 1;
+  // Generate smooth regression line
+  const xMin = Math.min(...formattedData.map((d) => d.x)) - 1;
   const xMax = 100;
-  const step = (xMax - xMin) / 50; // 50 points for smooth curve
-  
+  const step = (xMax - xMin) / 50;
+
   const linePoints = [];
   for (let x = xMin; x <= xMax; x += step) {
     const y = reg.predict(x)[1];
     linePoints.push({ x, y });
   }
-  console.log("Regression line points:", linePoints);
+
   return (
     <LineChart width={600} height={400}>
       <CartesianGrid />
-      <XAxis type="number" dataKey="x" name="Score" domain={['dataMin - 1',100]}/>
+      <XAxis
+        type="number"
+        dataKey="x"
+        name="Score"
+        domain={["dataMin - 1", 100]}
+      />
       <YAxis type="number" dataKey="y" name="Price" />
       <Tooltip cursor={{ strokeDasharray: "3 3" }} />
 
+      {/* Scatter points */}
       <Scatter
         name="Data"
         data={formattedData}
@@ -40,17 +56,28 @@ export default function ProductRegressionChart({ data, highlightVintage }) {
             <circle
               cx={cx}
               cy={cy}
-              r={highlightVintage && payload.vintage === highlightVintage ? 8 : 4}
-              fill={highlightVintage && payload.vintage === highlightVintage ? "red" : "#8884d8"}
+              r={
+                highlightVintage && payload.vintage === highlightVintage ? 8 : 4
+              }
+              fill={
+                highlightVintage && payload.vintage === highlightVintage
+                  ? "red"
+                  : "#8884d8"
+              }
             />
           );
         }}
       />
 
-      <Line type="monotone" dataKey="y" data={linePoints} stroke="green" dot={false} isAnimationActive={false}
-        xAxisId={0} // explicitly bind to default x-axis
-        yAxisId={0} // explicitly bind to default y-axis
-          />
-    </ScatterChart>
+      {/* Regression line */}
+      <Line
+        type="monotone"
+        data={linePoints}
+        dataKey="y"
+        stroke="green"
+        dot={false}
+        isAnimationActive={false}
+      />
+    </LineChart>
   );
 }
