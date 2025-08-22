@@ -13,6 +13,8 @@ export default function AutocompleteBox({ options, value, onChange }) {
 <datalist id="product-options">
       {options.map((opt) => (
         <option key={opt} value={opt} />
-  ))
-      </datalist>;
+  ))}
+      </datalist>
+    </div>
+    );
 }
