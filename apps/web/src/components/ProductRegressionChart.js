@@ -16,7 +16,7 @@ export default function ProductRegressionChart({ data, highlightVintage }) {
   return (
     <ScatterChart width={600} height={400}>
       <CartesianGrid />
-      <XAxis type="number" dataKey="x" name="Score" />
+      <XAxis type="number" dataKey="x" name="Score" domain={['dataMin - 1',100]}/>
       <YAxis type="number" dataKey="y" name="Price" />
       <Tooltip cursor={{ strokeDasharray: "3 3" }} />
 
