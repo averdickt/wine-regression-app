@@ -1,6 +1,6 @@
 import React from "react";
 import {
-  ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Line
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Scatter
 } from "recharts";
 import { bestFitRegression } from "../lib/Regression";
 
@@ -24,7 +24,7 @@ export default function ProductRegressionChart({ data, highlightVintage }) {
   }
   console.log("Regression line points:", linePoints);
   return (
-    <ScatterChart width={600} height={400}>
+    <LineChart width={600} height={400}>
       <CartesianGrid />
       <XAxis type="number" dataKey="x" name="Score" domain={['dataMin - 1',100]}/>
       <YAxis type="number" dataKey="y" name="Price" />
