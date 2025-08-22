@@ -47,7 +47,7 @@ export default function ProductRegressionChart({ data, highlightVintage }) {
         }}
       />
 
-      <Line type="monotone" dataKey="y" data={linePoints} stroke="green" dot={false} 
+      <Line type="monotone" dataKey="y" data={linePoints} stroke="green" dot={false} isAnimationActive={false}
         xAxisId={0} // explicitly bind to default x-axis
         yAxisId={0} // explicitly bind to default y-axis
           />
