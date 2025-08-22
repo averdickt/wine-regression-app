@@ -25,7 +25,7 @@ export default function PriceScoreVintageChart({ data, highlightVintage, DA_Star
           else if (payload.Vintage > DA_Finish) color = "yellow";
           else color = "green";
 
-          if (highlightVintage && payload.Vintage === highlightVintage) {
+          if (highlightVintage && String(payload.Vintage) === String(highlightVintage)) {
             color = "blue"; // highlight override
           }
 
