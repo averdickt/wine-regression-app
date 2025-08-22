@@ -12,16 +12,16 @@ export default function ProductRegressionChart({ data, highlightVintage }) {
   // Regression calculation
   const reg = bestFitRegression(formattedData.map(d => [d.x, d.y]));
 
-// Generate smooth line across the domain
-const xMin = Math.min(...formattedData.map(d => d.x)) - 1;
-const xMax = 100;
-const step = (xMax - xMin) / 50; // 50 points for smooth curve
-
-const linePoints = [];
-for (let x = xMin; x <= xMax; x += step) {
-  const y = reg.predict(x)[1];
-  linePoints.push({ x, y });
-}
+  // Generate smooth line across the domain
+  const xMin = Math.min(...formattedData.map(d => d.x)) - 1;
+  const xMax = 100;
+  const step = (xMax - xMin) / 50; // 50 points for smooth curve
+  
+  const linePoints = [];
+  for (let x = xMin; x <= xMax; x += step) {
+    const y = reg.predict(x)[1];
+    linePoints.push({ x, y });
+  }
 
   return (
     <ScatterChart width={600} height={400}>
