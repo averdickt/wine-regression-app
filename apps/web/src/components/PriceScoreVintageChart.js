@@ -11,7 +11,7 @@ export default function PriceScoreVintageChart({ data, highlightVintage, DA_Star
       <CartesianGrid />
       <XAxis dataKey="Vintage" />
       <YAxis yAxisId="left" label={{ value: "Price", angle: -90 }} />
-      <YAxis yAxisId="right" orientation="right" label={{ value: "Score", angle: 90 }} />
+      <YAxis yAxisId="right" orientation="right" domain={['dataMin - 1', 100]} label={{ value: "Score", angle: 90 }} />
       <Tooltip />
 
       <Bar
