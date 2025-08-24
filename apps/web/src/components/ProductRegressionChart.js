@@ -78,9 +78,6 @@ export default function ProductRegressionChart({ data, highlightVintage }) {
       <Scatter
         name="Data"
         data={formattedData}
-        xAxisId={0}
-        yAxisId={0}
-        dataKey="y"
         fill="#8884d8"
         shape={(props) => {
           const { cx, cy, payload } = props;
