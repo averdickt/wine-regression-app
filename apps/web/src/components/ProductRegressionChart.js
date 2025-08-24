@@ -7,6 +7,7 @@ import {
   CartesianGrid,
   Tooltip,
   Scatter,
+  ReferenceLine,
 } from "recharts";
 import { bestFitRegression } from "../lib/Regression";
 
@@ -14,12 +15,12 @@ export default function ProductRegressionChart({ data, highlightVintage }) {
   if (!data || data.length === 0) return null;
 
   const formattedData = data.map((d) => ({
-    x: Number(d.Score),     // ensure numeric
-    y: Number(d.Price),     // ensure numeric
-    vintage: d.Vintage,
+    x: Number(d.Score),     // Score
+    y: Number(d.Price),     // Price
+    vintage: d.Vintage,     // Keep vintage
   }));
 
-  // Regression calculation
+  // Calculate regression
   const reg = bestFitRegression(formattedData.map((d) => [d.x, d.y]));
 
   // Generate smooth regression line
@@ -42,7 +43,36 @@ export default function ProductRegressionChart({ data, highlightVintage }) {
         domain={["dataMin - 1", 100]}
       />
       <YAxis type="number" dataKey="y" name="Price" />
-      <Tooltip cursor={{ strokeDasharray: "3 3" }} />
+
+      {/* Custom tooltip to include Vintage */}
+      <Tooltip
+        cursor={{ strokeDasharray: "3 3" }}
+        formatter={(value, name, props) => {
+          if (name === "y") return [`$${value}`, "Price"];
+          if (name === "x") return [value, "Score"];
+          return value;
+        }}
+        labelFormatter={() => ""}
+        content={({ active, payload }) => {
+          if (active && payload && payload.length) {
+            const point = payload[0].payload;
+            return (
+              <div
+                style={{
+                  background: "white",
+                  border: "1px solid #ccc",
+                  padding: "5px",
+                }}
+              >
+                <div><b>Vintage:</b> {point.vintage}</div>
+                <div><b>Score:</b> {point.x}</div>
+                <div><b>Price:</b> {point.y}</div>
+              </div>
+            );
+          }
+          return null;
+        }}
+      />
 
       {/* Scatter points */}
       <Scatter
@@ -77,6 +107,15 @@ export default function ProductRegressionChart({ data, highlightVintage }) {
         dot={false}
         isAnimationActive={false}
       />
+
+      {/* Vertical reference line at selected vintage */}
+      {highlightVintage && (
+        <ReferenceLine
+          x={Number(highlightVintage)}
+          stroke="blue"
+          strokeDasharray="3 3"
+        />
+      )}
     </LineChart>
   );
 }
