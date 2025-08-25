@@ -45,7 +45,7 @@ domain={["dataMin - 1", 100]}
 />
 <YAxis type="number" dataKey="y" name="Price" />
 
-```
+'''
    {/* Scatter plot points */}
    <Scatter
      name="Products"
@@ -77,9 +77,9 @@ domain={["dataMin - 1", 100]}
                borderRadius: "5px",
              }}
 
-             <p>{`Score: ${point.x}`}</p>
-             <p>{`Price: ${point.y}`}</p>
-             {point.vintage && <p>{`Vintage: ${point.vintage}`}</p>}
+             <p>{'Score: ${point.x}'}</p>
+             <p>{'Price: ${point.y}'}</p>
+             {point.vintage && <p>{'Vintage: ${point.vintage}'}</p>}
            </div>
          );
        }
@@ -88,7 +88,7 @@ domain={["dataMin - 1", 100]}
    />
  </ScatterChart>
 </ResponsiveContainer>
-```
+'''
 
 );
 }
