@@ -1,8 +1,7 @@
 [
   {
-    "product": "Château Margaux",
-    "vintage": "2015",
-    "region": "Bordeaux-Margaux",
+    "product": "Chateau Margaux Premier Cru Classe",
+    "region": "Bordeaux",
     "images": {
       "bottle": "/images/margaux-bottle.jpg",
       "chateau": "/images/margaux-estate.jpg",
@@ -10,8 +9,8 @@
     }
   },
   {
-    "product": "Château Latour",
-    "region": "Bordeaux-Medoc",
+    "product": "Chateau Latour Premier Cru Classe",
+    "region": "Bordeaux",
     "images": {
     "bottle": "/images/latour-bottle.jpg",
     "chateau": "/images/latour-estate.jpg",
@@ -19,8 +18,8 @@
     }
   },
   {
-    "product": "Château Lafite Rothschild",
-    "region": "Bordeaux-Pauillac",
+    "product": "Chateau Lafite Rothschild Premier Cru Classe",
+    "region": "Bordeaux",
     "images": {
     "bottle": "/images/lafite-bottle.jpg",
     "chateau": "/images/lafite-estate.jpg",
@@ -28,8 +27,8 @@
     }
   },
 {
-    "product": "Château Angelus",
-    "region": "Bordeaux-Saint-Émilion",
+    "product": "Chateu Angelus",
+    "region": "Bordeaux",
     "images": {
     "bottle": "/images/angelus-bottle.jpg",
     "chateau": "/images/angelus-estate.jpg",
@@ -38,7 +37,7 @@
   },
 {
     "product": "Le Pin",
-    "region": "Bordeaux-Pomerol",
+    "region": "Bordeaux",
     "images": {
     "bottle": "/images/lepin-bottle.jpg",
     "chateau": "/images/lepin-estate.jpg",
@@ -47,7 +46,7 @@
   },
 {
     "product": "Petrus",
-    "region": "Bordeaux-Pomerol",
+    "region": "Bordeaux",
     "images": {
     "bottle": "/images/petrus-bottle.jpg",
     "chateau": "/images/petrus-estate.jpg",
@@ -55,8 +54,8 @@
     }
   },
 {
-    "product": "Château Cheval Blanc",
-    "region": "Bordeaux-Saint-Émilion",
+    "product": "Chateau Cheval Blanc",
+    "region": "Bordeaux",
     "images": {
     "bottle": "/images/chevalblanc-bottle.jpg",
     "chateau": "/images/chevalblanc-estate.jpg",
@@ -64,8 +63,8 @@
     }
   },
 {
-    "product": "Château Mouton Rothschild",
-    "region": "Bordeaux-Pauillac",
+    "product": "Chateau Mouton Rothschild Premier Cru Classe",
+    "region": "Bordeaux",
     "images": {
     "bottle": "/images/moutonrothschild-bottle.jpg",
     "chateau": "/images/moutonrothshild-estate.jpg",
@@ -73,8 +72,8 @@
     }
   },
 {
-    "product": "Château Pavie",
-    "region": "Bordeaux-Saint-Émilion",
+    "product": "Chateau Pavie Premier Cru Classe A",
+    "region": "Bordeaux",
     "images": {
     "bottle": "/images/pavie-bottle.jpg",
     "chateau": "/images/pavie-estate.jpg",
@@ -82,8 +81,8 @@
     }
   },
 {
-    "product": "Château Lafleur",
-    "region": "Bordeaux-Pomerol",
+    "product": "Chateau Lafleur",
+    "region": "Bordeaux",
     "images": {
     "bottle": "/images/lafleur-bottle.jpg",
     "chateau": "/images/lafleur-estate.jpg",
@@ -92,7 +91,7 @@
   },
 {
     "product": "Chateau Haut-Brion",
-    "region": "Bordeaux-Pessac-Léognan",
+    "region": "Burgundy",
     "images": {
     "bottle": "/images/hautbrion-bottle.jpg",
     "chateau": "/images/hautbrion-estate.jpg",
