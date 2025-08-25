@@ -1,4 +1,4 @@
-import React from “react”;
+import React from "react";
 import {
 ScatterChart,
 Scatter,
@@ -8,8 +8,8 @@ YAxis,
 CartesianGrid,
 Tooltip,
 ResponsiveContainer,
-} from “recharts”;
-import { bestFitRegression } from “../lib/Regression”;
+} from "recharts";
+import { bestFitRegression } from "../lib/Regression";
 
 export default function ProductRegressionChart({ data, highlightVintage }) {
 if (!data || data.length === 0) return null;
