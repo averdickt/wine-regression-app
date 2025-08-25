@@ -1,47 +1,40 @@
 import React from "react";
-import images from "../../data/images.json";
+import images from "../../data/images.json"; // path relative to component
 
 export default function WineDetailPanel({ product, vintage, region }) {
-  if (!product || !vintage || !region) return null;
-
-  const match = images.find(
-    (entry) =>
-      entry.product === product &&
-      String(entry.vintage) === String(vintage) &&
-      entry.region === region
-  );
-
-  if (!match) return <div style={{ padding: "10px" }}>No images available.</div>;
-
-  const { bottle, chateau, region: regionImg } = match.images;
+  const entry = images[product] || {};
 
   return (
     <div
       style={{
-        width: "300px",
+        width: "280px",
         padding: "15px",
         borderLeft: "1px solid #ccc",
         background: "#fafafa",
-        overflowY: "auto"
       }}
     >
-      <h3>{product} {vintage}</h3>
-      <p><b>Region:</b> {region}</p>
+      <h3>Details</h3>
+      <p><strong>Product:</strong> {product}</p>
+      {vintage && <p><strong>Vintage:</strong> {vintage}</p>}
+      {region && <p><strong>Region:</strong> {region}</p>}
 
-      {bottle && (
-        <div style={{ marginBottom: "10px" }}>
-          <img src={bottle} alt="Bottle" style={{ width: "100%" }} />
-        </div>
+      {entry.bottle && (
+        <>
+          <h4>Bottle</h4>
+          <img src={entry.bottle} alt="Bottle" style={{ width: "100%" }} />
+        </>
       )}
-      {chateau && (
-        <div style={{ marginBottom: "10px" }}>
-          <img src={chateau} alt="Château" style={{ width: "100%" }} />
-        </div>
+      {entry.chateau && (
+        <>
+          <h4>Château</h4>
+          <img src={entry.chateau} alt="Chateau" style={{ width: "100%" }} />
+        </>
       )}
-      {regionImg && (
-        <div>
-          <img src={regionImg} alt="Region" style={{ width: "100%" }} />
-        </div>
+      {entry.region && (
+        <>
+          <h4>Region</h4>
+          <img src={entry.region} alt="Region" style={{ width: "100%" }} />
+        </>
       )}
     </div>
   );
