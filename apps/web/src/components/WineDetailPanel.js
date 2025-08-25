@@ -50,10 +50,37 @@ export default function WineDetailPanel({ product, vintage }) {
   return (
     <div style={{ marginTop: "20px", padding: "10px", border: "1px solid #ccc" }}>
       <h3>Wine Details</h3>
-      <p><strong>Product:</strong> {product}</p>
+      <p><strong>Product:</strong> {bestMatch.product}</p>
       {vintage && <p><strong>Vintage:</strong> {vintage}</p>}
       <p><strong>Region:</strong> {bestMatch.region}</p>
 
+      {/* Optional blend */}
+      {bestMatch.blend && (
+        <p><strong>Blend:</strong> {bestMatch.blend}</p>
+      )}
+
+      {/* Optional description */}
+      {bestMatch.description && (
+        <p><strong>Description:</strong> {bestMatch.description}</p>
+      )}
+
+      {/* Optional critics (array of strings or objects) */}
+      {bestMatch.critics && bestMatch.critics.length > 0 && (
+        <div style={{ marginTop: "10px" }}>
+          <strong>Critics:</strong>
+          <ul>
+            {bestMatch.critics.map((c, i) => (
+              <li key={i}>
+                {typeof c === "string"
+                  ? c
+                  : <><em>{c.source}:</em> {c.comment}</>}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Images */}
       <div style={{ display: "flex", gap: "20px", marginTop: "10px" }}>
         {bestMatch.images?.bottle && (
           <img
