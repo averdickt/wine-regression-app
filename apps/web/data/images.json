@@ -1,12 +1,100 @@
-{
-  "Château Margaux": {
-    "bottle": "/images/margaux-bottle.jpg",
-    "chateau": "/images/margaux-estate.jpg",
-    "region": "/images/bordeaux-map.jpg"
+[
+  {
+    "product": "Château Margaux",
+    "region": "Bordeaux-Margaux",
+    "images": {
+      "bottle": "/images/margaux-bottle.jpg",
+      "chateau": "/images/margaux-estate.jpg",
+      "region": "/images/bordeaux-map.jpg"
+    }
   },
-  "Chateau Latour": {
+  {
+    "product": "Château Latour",
+    "region": "Bordeaux-Medoc",
+    "images": {
     "bottle": "/images/latour-bottle.jpg",
     "chateau": "/images/latour-estate.jpg",
-    "region": "/images/bordeaux-medoc-map.jpg"
-  }
-}
+    "region": "/images/bordeaux-map.jpg"
+    }
+  },
+  {
+    "product": "Château Lafite Rothschild",
+    "region": "Bordeaux-Pauillac",
+    "images": {
+    "bottle": "/images/lafite-bottle.jpg",
+    "chateau": "/images/lafite-estate.jpg",
+    "region": "/images/bordeaux-map.jpg"
+    }
+  },
+{
+    "product": "Château Angelus",
+    "region": "Bordeaux-Saint-Emilion",
+    "images": {
+    "bottle": "/images/angelus-bottle.jpg",
+    "chateau": "/images/angelus-estate.jpg",
+    "region": "/images/bordeaux-map.jpg"
+    }
+  },
+{
+    "product": "Le Pin",
+    "region": "Bordeaux-Pomerol",
+    "images": {
+    "bottle": "/images/lepin-bottle.jpg",
+    "chateau": "/images/lepin-estate.jpg",
+    "region": "/images/bordeaux-map.jpg"
+    }
+  },
+{
+    "product": "Petrus",
+    "region": "Bordeaux-Pomerol",
+    "images": {
+    "bottle": "/images/petrus-bottle.jpg",
+    "chateau": "/images/petrus-estate.jpg",
+    "region": "/images/bordeaux-map.jpg"
+    }
+  },
+{
+    "product": "Château Cheval Blanc",
+    "region": "Bordeaux-Saint-Emilion",
+    "images": {
+    "bottle": "/images/chevalblanc-bottle.jpg",
+    "chateau": "/images/chevalblanc-estate.jpg",
+    "region": "/images/bordeaux-map.jpg"
+    }
+  },
+{
+    "product": "Château Mouton Rothschild",
+    "region": "Bordeaux-Pauillac",
+    "images": {
+    "bottle": "/images/moutonrothschild-bottle.jpg",
+    "chateau": "/images/moutonrothshild-estate.jpg",
+    "region": "/images/bordeaux-map.jpg"
+    }
+  },
+{
+    "product": "Château Pavie",
+    "region": "Bordeaux-Saint-Emilion",
+    "images": {
+    "bottle": "/images/pavie-bottle.jpg",
+    "chateau": "/images/pavie-estate.jpg",
+    "region": "/images/bordeaux-map.jpg"
+    }
+  },
+{
+    "product": "Château Lafleur",
+    "region": "Bordeaux-Pomerol",
+    "images": {
+    "bottle": "/images/lafleur-bottle.jpg",
+    "chateau": "/images/lafleur-estate.jpg",
+    "region": "/images/bordeaux-map.jpg"
+    }
+  },
+{
+    "product": "Chateau Haut-Brion",
+    "region": "Bordeaux-Pessac-Leognan",
+    "images": {
+    "bottle": "/images/hautbrion-bottle.jpg",
+    "chateau": "/images/hautbrion-estate.jpg",
+    "region": "/images/bordeaux-map.jpg"
+    }
+  },]
