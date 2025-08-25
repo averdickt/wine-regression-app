@@ -1,13 +1,18 @@
 [
   {
-    "product": "Chateau Margaux Premier Cru Classe",
-    "region": "Bordeaux",
-    "blend": "Cabernet Sauvingon, Merlot, Cabernet Franc, Petit Verdot",
-      "images": {
-      "bottle": "/images/margaux-bottle.jpg",
-      "chateau": "/images/margaux-estate.jpg",
-      "region": "/images/bordeaux-map.jpg"
-    }
+  "product": "Château Margaux",
+  "region": "Bordeaux",
+  "blend": "85% Cabernet Sauvignon, 10% Merlot, 5% Petit Verdot",
+  "description": "Elegant, perfumed and complex, with silky tannins and long finish.",
+  "critics": [
+    { "source": "Wine Advocate", "comment": "A masterpiece of finesse and balance." },
+    { "source": "James Suckling", "comment": "Aromas of violets and blackcurrants, very refined." }
+  ],
+  "images": {
+    "bottle": "/images/margaux-bottle.jpg",
+    "chateau": "/images/margaux-estate.jpg",
+    "region": "/images/bordeaux-map.jpg"
+  }
   },
   {
     "product": "Chateau Latour Premier Cru Classe",
