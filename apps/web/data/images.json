@@ -28,7 +28,7 @@
   },
 {
     "product": "Château Angelus",
-    "region": "Bordeaux-Saint-Emilion",
+    "region": "Bordeaux-Saint-Émilion",
     "images": {
     "bottle": "/images/angelus-bottle.jpg",
     "chateau": "/images/angelus-estate.jpg",
@@ -55,7 +55,7 @@
   },
 {
     "product": "Château Cheval Blanc",
-    "region": "Bordeaux-Saint-Emilion",
+    "region": "Bordeaux-Saint-Émilion",
     "images": {
     "bottle": "/images/chevalblanc-bottle.jpg",
     "chateau": "/images/chevalblanc-estate.jpg",
@@ -73,7 +73,7 @@
   },
 {
     "product": "Château Pavie",
-    "region": "Bordeaux-Saint-Emilion",
+    "region": "Bordeaux-Saint-Émilion",
     "images": {
     "bottle": "/images/pavie-bottle.jpg",
     "chateau": "/images/pavie-estate.jpg",
@@ -91,7 +91,7 @@
   },
 {
     "product": "Chateau Haut-Brion",
-    "region": "Bordeaux-Pessac-Leognan",
+    "region": "Bordeaux-Pessac-Léognan",
     "images": {
     "bottle": "/images/hautbrion-bottle.jpg",
     "chateau": "/images/hautbrion-estate.jpg",
