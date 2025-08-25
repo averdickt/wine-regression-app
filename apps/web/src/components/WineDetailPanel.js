@@ -1,5 +1,5 @@
 import React from "react";
-import images from "../data/images.json";
+import images from "../../data/images.json";
 
 // Simple similarity function
 function stringSimilarity(a, b) {
