@@ -24,7 +24,7 @@ vintage: d.Vintage,     // Keep vintage
 const reg = bestFitRegression(formattedData.map((d) => [d.x, d.y]));
 
 // Generate smooth regression line
-const xMin = Math.min(…formattedData.map((d) => d.x)) - 1;
+const xMin = Math.min(...formattedData.map((d) => d.x)) - 1;
 const xMax = 100;
 const step = (xMax - xMin) / 50;
 const linePoints = [];
@@ -38,10 +38,10 @@ return (
 <ScatterChart width={600} height={400}>
 <CartesianGrid />
 <XAxis
-type=“number”
-dataKey=“x”
-name=“Score”
-domain={[“dataMin - 1”, 100]}
+type="number"
+dataKey="x"
+name="Score"
+domain={["dataMin - 1", 100]}
 />
 <YAxis type="number" dataKey="y" name="Price" />
 
