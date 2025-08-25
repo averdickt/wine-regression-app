@@ -1,41 +1,82 @@
 import React from "react";
-import images from "../../data/images.json"; // path relative to component
+import images from "../data/images.json";
 
-export default function WineDetailPanel({ product, vintage, region }) {
-  const entry = images[product] || {};
+// Simple similarity function
+function stringSimilarity(a, b) {
+  if (!a || !b) return 0;
+  const aWords = a.toLowerCase().split(/\s+/);
+  const bWords = b.toLowerCase().split(/\s+/);
+  const intersection = aWords.filter(w => bWords.includes(w)).length;
+  return intersection / Math.max(aWords.length, bWords.length);
+}
+
+export default function WineDetailPanel({ product, vintage }) {
+  if (!product) return null;
+
+  // 1. Try exact match (product or alias)
+  const exactMatch = images.find(
+    item =>
+      item.product.toLowerCase() === product.toLowerCase() ||
+      (item.aliases &&
+        item.aliases.some(alias => alias.toLowerCase() === product.toLowerCase()))
+  );
+
+  let bestMatch = exactMatch;
+
+  // 2. If no exact match, try fuzzy match
+  if (!bestMatch) {
+    bestMatch = images
+      .map(item => {
+        const allNames = [item.product, ...(item.aliases || [])];
+        const bestScore = Math.max(...allNames.map(name => stringSimilarity(product, name)));
+        return { ...item, score: bestScore };
+      })
+      .sort((a, b) => b.score - a.score)[0];
+
+    if (bestMatch && bestMatch.score < 0.2) {
+      bestMatch = null;
+    }
+  }
+
+  if (!bestMatch) {
+    return (
+      <div style={{ marginTop: "20px", padding: "10px", border: "1px solid #ccc" }}>
+        <h3>Wine Details</h3>
+        <p>No details found for {product}</p>
+      </div>
+    );
+  }
 
   return (
-    <div
-      style={{
-        width: "280px",
-        padding: "15px",
-        borderLeft: "1px solid #ccc",
-        background: "#fafafa",
-      }}
-    >
-      <h3>Details</h3>
+    <div style={{ marginTop: "20px", padding: "10px", border: "1px solid #ccc" }}>
+      <h3>Wine Details</h3>
       <p><strong>Product:</strong> {product}</p>
       {vintage && <p><strong>Vintage:</strong> {vintage}</p>}
-      {region && <p><strong>Region:</strong> {region}</p>}
+      <p><strong>Region:</strong> {bestMatch.region}</p>
 
-      {entry.bottle && (
-        <>
-          <h4>Bottle</h4>
-          <img src={entry.bottle} alt="Bottle" style={{ width: "100%" }} />
-        </>
-      )}
-      {entry.chateau && (
-        <>
-          <h4>Château</h4>
-          <img src={entry.chateau} alt="Chateau" style={{ width: "100%" }} />
-        </>
-      )}
-      {entry.region && (
-        <>
-          <h4>Region</h4>
-          <img src={entry.region} alt="Region" style={{ width: "100%" }} />
-        </>
-      )}
+      <div style={{ display: "flex", gap: "20px", marginTop: "10px" }}>
+        {bestMatch.images?.bottle && (
+          <img
+            src={bestMatch.images.bottle}
+            alt={`${bestMatch.product} bottle`}
+            style={{ width: "120px", height: "auto" }}
+          />
+        )}
+        {bestMatch.images?.chateau && (
+          <img
+            src={bestMatch.images.chateau}
+            alt={`${bestMatch.product} estate`}
+            style={{ width: "180px", height: "auto" }}
+          />
+        )}
+        {bestMatch.images?.region && (
+          <img
+            src={bestMatch.images.region}
+            alt={`${bestMatch.region} map`}
+            style={{ width: "180px", height: "auto" }}
+          />
+        )}
+      </div>
     </div>
   );
 }
