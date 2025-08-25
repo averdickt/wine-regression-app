@@ -1,6 +1,7 @@
 [
   {
     "product": "Château Margaux",
+    "vintage": "2015",
     "region": "Bordeaux-Margaux",
     "images": {
       "bottle": "/images/margaux-bottle.jpg",
