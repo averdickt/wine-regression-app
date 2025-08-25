@@ -1,4 +1,4 @@
-import React from "react";
+import React from “react”;
 import {
 ScatterChart,
 Scatter,
@@ -8,8 +8,8 @@ YAxis,
 CartesianGrid,
 Tooltip,
 ResponsiveContainer,
-} from "recharts";
-import { bestFitRegression } from "../lib/Regression";
+} from “recharts”;
+import { bestFitRegression } from “../lib/Regression”;
 
 export default function ProductRegressionChart({ data, highlightVintage }) {
 if (!data || data.length === 0) return null;
@@ -24,7 +24,7 @@ vintage: d.Vintage,     // Keep vintage
 const reg = bestFitRegression(formattedData.map((d) => [d.x, d.y]));
 
 // Generate smooth regression line
-const xMin = Math.min(...formattedData.map((d) => d.x)) - 1;
+const xMin = Math.min(…formattedData.map((d) => d.x)) - 1;
 const xMax = 100;
 const step = (xMax - xMin) / 50;
 const linePoints = [];
@@ -38,55 +38,55 @@ return (
 <ScatterChart width={600} height={400}>
 <CartesianGrid />
 <XAxis
-type="number"
-dataKey="x"
-name="Score"
-domain={["dataMin - 1", 100]}
+type=“number”
+dataKey=“x”
+name=“Score”
+domain={[“dataMin - 1”, 100]}
 />
 <YAxis type="number" dataKey="y" name="Price" />
 
 ```
-   {/* Scatter plot points */}
-   <Scatter
-     name="Products"
-     data={formattedData}
-     fill="#8884d8"
-   />
+    {/* Scatter plot points */}
+    <Scatter
+      name="Products"
+      data={formattedData}
+      fill="#8884d8"
+    />
 
-   {/* Regression line */}
-   <Scatter
-     name="Regression Line"
-     data={linePoints}
-     fill="none"
-     line={{ stroke: "#ff7300", strokeWidth: 2 }}
-     shape={() => null}
-   />
+    {/* Regression line */}
+    <Scatter
+      name="Regression Line"
+      data={linePoints}
+      fill="none"
+      line={{ stroke: "#ff7300", strokeWidth: 2 }}
+      shape={() => null}
+    />
 
-   {/* Custom tooltip to include Vintage */}
-   <Tooltip
-     cursor={{ strokeDasharray: "3 3" }}
-     content={({ active, payload }) => {
-       if (active && payload && payload.length) {
-         const point = payload[0].payload;
-         return (
-           <div
-             style={{
-               background: "white",
-               border: "1px solid #ccc",
-               padding: "10px",
-               borderRadius: "5px",
-             }}
-
-             <p>{`Score: ${point.x}`}</p>
-             <p>{`Price: ${point.y}`}</p>
-             {point.vintage && <p>{`Vintage: ${point.vintage}'}</p>}
-           </div>
-         );
-       }
-       return null;
-     }}
-   />
- </ScatterChart>
+    {/* Custom tooltip to include Vintage */}
+    <Tooltip
+      cursor={{ strokeDasharray: "3 3" }}
+      content={({ active, payload }) => {
+        if (active && payload && payload.length) {
+          const point = payload[0].payload;
+          return (
+            <div
+              style={{
+                background: "white",
+                border: "1px solid #ccc",
+                padding: "10px",
+                borderRadius: "5px",
+              }}
+            >
+              <p>Score: {point.x}</p>
+              <p>Price: {point.y}</p>
+              {point.vintage && <p>Vintage: {point.vintage}</p>}
+            </div>
+          );
+        }
+        return null;
+      }}
+    />
+  </ScatterChart>
 </ResponsiveContainer>
 ```
 
