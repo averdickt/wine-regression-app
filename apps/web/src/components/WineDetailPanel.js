@@ -1,5 +1,5 @@
 import React from "react";
-import images from "../data/images.json";
+import images from "../../data/images.json";
 
 export default function WineDetailPanel({ product, vintage, region }) {
   if (!product || !vintage || !region) return null;
