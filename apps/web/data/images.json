@@ -1,0 +1,12 @@
+{
+  "Château Margaux": {
+    "bottle": "/images/margaux-bottle.jpg",
+    "chateau": "/images/margaux-estate.jpg",
+    "region": "/images/bordeaux-map.jpg"
+  },
+  "Chateau Latour": {
+    "bottle": "/images/latour-bottle.jpg",
+    "chateau": "/images/latour-estate.jpg",
+    "region": "/images/bordeaux-medoc-map.jpg"
+  }
+}
