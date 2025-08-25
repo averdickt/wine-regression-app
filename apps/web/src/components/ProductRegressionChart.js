@@ -45,7 +45,7 @@ domain={["dataMin - 1", 100]}
 />
 <YAxis type="number" dataKey="y" name="Price" />
 
-```
+
     {/* Scatter plot points */}
     <Scatter
       name="Products"
@@ -88,7 +88,7 @@ domain={["dataMin - 1", 100]}
     />
   </ScatterChart>
 </ResponsiveContainer>
-```
+
 
 );
 }
