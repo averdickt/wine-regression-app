@@ -2,7 +2,16 @@
   {
     "product": "Chateau Margaux Premier Cru Classe",
     "region": "Bordeaux",
-    "images": {
+    "blend": "Cabernet Sauvingon, Merlot, Cabernet Franc, Petit Verdot",
+    "critics": [
+      {
+        "author": "Lisa Perrotti-Brown MW, The Wine Independent",
+        "comment": "A blend of 90% Cabernet Sauvignon, 7% Merlot, 1.5% Cabernet Franc, and 1.5% Petit Verdot, the 2010 Chateau Margaux is deep garnet in color. It needs a shake or two before it erupts from the glass with powerful notes of crème de cassis, baked plums, and licorice, followed by sparks of redcurrants, mocha, black olives, and tar, plus a fragrant waft of jasmine tea. The medium-bodied palate maintains its elegance and grace with a refreshing backbone and firm, yet fine-grained, tannins supporting the generous fruit, finishing with an array of beguiling spice, floral, and fragrant earth nuances. A masterpiece!",
+        "vintage": "2010"
+        "score": 100
+      }
+    ],
+        "images": {
       "bottle": "/images/margaux-bottle.jpg",
       "chateau": "/images/margaux-estate.jpg",
       "region": "/images/bordeaux-map.jpg"
