@@ -8,8 +8,8 @@ YAxis,
 CartesianGrid,
 Tooltip,
 ResponsiveContainer,
-} from “recharts”;
-import { bestFitRegression } from “../lib/Regression”;
+} from "recharts";
+import { bestFitRegression } from "../lib/Regression";
 
 export default function ProductRegressionChart({ data, highlightVintage }) {
 if (!data || data.length === 0) return null;
@@ -38,10 +38,10 @@ return (
 <ScatterChart width={600} height={400}>
 <CartesianGrid />
 <XAxis
-type=“number”
-dataKey=“x”
-name=“Score”
-domain={[“dataMin - 1”, 100]}
+type="number"
+dataKey="x"
+name="Score"
+domain={["dataMin - 1", 100]}
 />
 <YAxis type="number" dataKey="y" name="Price" />
 
