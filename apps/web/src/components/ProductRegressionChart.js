@@ -48,10 +48,22 @@ domain={["dataMin - 1", 100]}
 
     {/* Scatter plot points */}
     <Scatter
-      name="Products"
-      data={formattedData}
-      fill="#8884d8"
-    />
+  name="Products"
+  data={formattedData}
+  shape={(props) => {
+    const { cx, cy, payload } = props;
+    const isHighlighted =
+      highlightVintage && String(payload.vintage) === String(highlightVintage);
+    return (
+      <circle
+        cx={cx}
+        cy={cy}
+        r={isHighlighted ? 8 : 4}
+        fill={isHighlighted ? "red" : "#8884d8"}
+      />
+    );
+  }}
+/>
 
     {/* Regression line */}
     <Scatter
