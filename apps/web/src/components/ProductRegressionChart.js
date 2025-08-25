@@ -46,47 +46,47 @@ domain={[“dataMin - 1”, 100]}
 <YAxis type="number" dataKey="y" name="Price" />
 
 ```
-    {/* Scatter plot points */}
-    <Scatter
-      name="Products"
-      data={formattedData}
-      fill="#8884d8"
-    />
+   {/* Scatter plot points */}
+   <Scatter
+     name="Products"
+     data={formattedData}
+     fill="#8884d8"
+   />
 
-    {/* Regression line */}
-    <Scatter
-      name="Regression Line"
-      data={linePoints}
-      fill="none"
-      line={{ stroke: "#ff7300", strokeWidth: 2 }}
-      shape={() => null}
-    />
+   {/* Regression line */}
+   <Scatter
+     name="Regression Line"
+     data={linePoints}
+     fill="none"
+     line={{ stroke: "#ff7300", strokeWidth: 2 }}
+     shape={() => null}
+   />
 
-    {/* Custom tooltip to include Vintage */}
-    <Tooltip
-      cursor={{ strokeDasharray: "3 3" }}
-      content={({ active, payload }) => {
-        if (active && payload && payload.length) {
-          const point = payload[0].payload;
-          return (
-            <div
-              style={{
-                background: "white",
-                border: "1px solid #ccc",
-                padding: "10px",
-                borderRadius: "5px",
-              }}
-            >
-              <p>{`Score: ${point.x}`}</p>
-              <p>{`Price: ${point.y}`}</p>
-              {point.vintage && <p>{`Vintage: ${point.vintage}`}</p>}
-            </div>
-          );
-        }
-        return null;
-      }}
-    />
-  </ScatterChart>
+   {/* Custom tooltip to include Vintage */}
+   <Tooltip
+     cursor={{ strokeDasharray: "3 3" }}
+     content={({ active, payload }) => {
+       if (active && payload && payload.length) {
+         const point = payload[0].payload;
+         return (
+           <div
+             style={{
+               background: "white",
+               border: "1px solid #ccc",
+               padding: "10px",
+               borderRadius: "5px",
+             }}
+
+             <p>{`Score: ${point.x}`}</p>
+             <p>{`Price: ${point.y}`}</p>
+             {point.vintage && <p>{`Vintage: ${point.vintage}`}</p>}
+           </div>
+         );
+       }
+       return null;
+     }}
+   />
+ </ScatterChart>
 </ResponsiveContainer>
 ```
 
