@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
 import AutocompleteBox from "../src/components/AutocompleteBox";
 import Dropdown from "../src/components/Dropdown";
@@ -12,6 +12,28 @@ export default function Home() {
   const [vintage, setVintage] = useState("");
   const [region, setRegion] = useState("");
 
+  // --- AUTOLOAD from public/processed_wine_data.xlsx ---
+  useEffect(() => {
+    async function fetchDefaultData() {
+      try {
+        const response = await fetch("/processed_wine_data.xlsx");
+        if (!response.ok) {
+          console.error("Failed to fetch default Excel file");
+          return;
+        }
+        const arrayBuffer = await response.arrayBuffer();
+        const workbook = XLSX.read(arrayBuffer, { type: "array" });
+        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+        setRows(jsonData);
+      } catch (err) {
+        console.error("Error loading default Excel file:", err);
+      }
+    }
+    fetchDefaultData();
+  }, []);
+
+  // --- HANDLE MANUAL UPLOAD ---
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     const reader = new FileReader();
@@ -31,18 +53,26 @@ export default function Home() {
 
   const filteredData = rows.filter((r) => r.Product === product);
 
-  // whenever product changes, also set region (for sidebar lookup)
-  React.useEffect(() => {
+  // whenever product changes, update region
+  useEffect(() => {
     if (filteredData.length > 0) {
       setRegion(filteredData[0].Region || "");
     }
   }, [product, filteredData]);
+
+  if (!rows || rows.length === 0) {
+    return <p>Loading default wine data...</p>;
+  }
 
   return (
     <div style={{ padding: "20px", display: "flex" }}>
       {/* LEFT SIDE: controls + charts */}
       <div style={{ flex: 1, paddingRight: "20px" }}>
         <h1>Wine Charts</h1>
+        <p>
+          Default dataset loaded from <code>processed_wine_data.xlsx</code>.  
+          Upload another file to override:
+        </p>
         <input type="file" accept=".xlsx,.csv" onChange={handleFileUpload} />
 
         <div style={{ marginTop: "20px" }}>
