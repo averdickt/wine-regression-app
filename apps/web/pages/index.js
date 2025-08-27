@@ -4,8 +4,7 @@ import AutocompleteBox from "../src/components/AutocompleteBox";
 import Dropdown from "../src/components/Dropdown";
 import ProductRegressionChart from "../src/components/ProductRegressionChart";
 import PriceScoreVintageChart from "../src/components/PriceScoreVintageChart";
-import WineDetailPanel from "../src/components/WineDetailPanel";
-import WineScanner from "../src/components/WineScanner"; // NEW
+import WineDetailPanel from "../src/components/WineDetailPanel"; // new
 
 export default function Home() {
   const [rows, setRows] = useState([]);
@@ -61,16 +60,6 @@ export default function Home() {
     }
   }, [product, filteredData]);
 
-  // --- SCAN RESULT HANDLER ---
-  const handleScanResult = (result) => {
-    if (result.product) {
-      setProduct(result.product);
-    }
-    if (result.vintage) {
-      setVintage(result.vintage);
-    }
-  };
-
   if (!rows || rows.length === 0) {
     return <p>Loading default wine data...</p>;
   }
@@ -90,9 +79,6 @@ export default function Home() {
           <AutocompleteBox options={productOptions} value={product} onChange={setProduct} />
           <Dropdown options={vintageOptions} value={vintage} onChange={setVintage} />
         </div>
-
-        {/* NEW: Wine Scanner Section */}
-        <WineScanner rows={rows} onResult={handleScanResult} />
 
         <div style={{ marginTop: "40px" }}>
           <h2>Product Regression Chart</h2>
