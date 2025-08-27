@@ -1,7 +1,7 @@
 [
   {
   "product": "Chateau Margaux Premier Cru Classe",
-  "region": "Bordeaux",
+  "region": "Bordeaux-Medoc",
   "blend": "85% Cabernet Sauvignon, 10% Merlot, 5% Petit Verdot",
   "description": "Elegant, perfumed and complex, with silky tannins and long finish.",
   "critics": [
@@ -16,7 +16,7 @@
   },
   {
     "product": "Chateau Latour Premier Cru Classe",
-    "region": "Bordeaux",
+    "region": "Bordeaux-Pauillac,
     "images": {
     "bottle": "/images/latour-bottle.jpg",
     "chateau": "/images/latour-estate.jpg",
@@ -25,7 +25,7 @@
   },
   {
     "product": "Chateau Lafite Rothschild Premier Cru Classe",
-    "region": "Bordeaux",
+    "region": "Bordeaux-Pauillac",
     "images": {
     "bottle": "/images/lafite-bottle.jpg",
     "chateau": "/images/lafite-estate.jpg",
@@ -34,7 +34,7 @@
   },
 {
     "product": "Chateu Angelus",
-    "region": "Bordeaux",
+    "region": "Bordeaux-Saint-Emilion",
     "images": {
     "bottle": "/images/angelus-bottle.jpg",
     "chateau": "/images/angelus-estate.jpg",
@@ -43,7 +43,7 @@
   },
 {
     "product": "Le Pin",
-    "region": "Bordeaux",
+    "region": "Bordeaux-Pomerol,
     "images": {
     "bottle": "/images/lepin-bottle.jpg",
     "chateau": "/images/lepin-estate.jpg",
@@ -52,7 +52,7 @@
   },
 {
     "product": "Petrus",
-    "region": "Bordeaux",
+    "region": "Bordeaux-Pomerol,
     "images": {
     "bottle": "/images/petrus-bottle.jpg",
     "chateau": "/images/petrus-estate.jpg",
@@ -61,7 +61,7 @@
   },
 {
     "product": "Chateau Cheval Blanc",
-    "region": "Bordeaux",
+    "region": "Bordeaux-Saint-Emilion,
     "images": {
     "bottle": "/images/chevalblanc-bottle.jpg",
     "chateau": "/images/chevalblanc-estate.jpg",
@@ -70,7 +70,7 @@
   },
 {
     "product": "Chateau Mouton Rothschild Premier Cru Classe",
-    "region": "Bordeaux",
+    "region": "Bordeaux-Pauillac,
     "images": {
     "bottle": "/images/moutonrothschild-bottle.jpg",
     "chateau": "/images/moutonrothschild-estate.jpg",
@@ -79,7 +79,7 @@
   },
 {
     "product": "Chateau Pavie Premier Cru Classe A",
-    "region": "Bordeaux",
+    "region": "Bordeaux-Saint-Emilion,
     "images": {
     "bottle": "/images/pavie-bottle.jpg",
     "chateau": "/images/pavie-estate.jpg",
@@ -88,7 +88,7 @@
   },
 {
     "product": "Chateau Lafleur",
-    "region": "Bordeaux",
+    "region": "Bordeaux-Pomerol",
     "images": {
     "bottle": "/images/lafleur-bottle.jpg",
     "chateau": "/images/lafleur-estate.jpg",
@@ -97,11 +97,37 @@
   },
 {
     "product": "Chateau Haut-Brion Premier Cru Classe",
-    "region": "Burgundy",
+    "region": "Bordeaux-Pessac-Leognan",
     "images": {
     "bottle": "/images/hautbrion-bottle.jpg",
     "chateau": "/images/hautbrion-estate.jpg",
     "region": "/images/bordeaux-map.jpg"
     }
-  }
-]
+  },
+  {
+    "product": "Pavillon Rouge",
+    "region": "Bordeaux-Medoc",
+    "images": {
+    "bottle": "/images/margaux-bottle.jpg",
+    "chateau": "/images/margaux-estate.jpg",
+    "region": "/images/bordeaux-map.jpg"
+    }
+  },
+{
+    "product": "Margaux",
+    "region": "Bordeaux-Medoc",
+    "images": {
+    "bottle": "/images/margaux-bottle.jpg",
+    "chateau": "/images/margaux-estate.jpg",
+    "region": "/images/bordeaux-map.jpg"
+    }
+  },
+{
+    "product": "Tignanello,
+    "region": "Chianti Classico",
+    "images": {
+    "bottle": "/images/tignanello-bottle.jpg",
+    "chateau": "/images/tignanello-estate.jpg",
+    "region": "/images/chianti-map.jpg"
+    }
+  }]
