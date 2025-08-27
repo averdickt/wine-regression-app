@@ -108,7 +108,7 @@
     "product": "Pavillon Rouge",
     "region": "Bordeaux-Medoc",
     "images": {
-    "bottle": "/images/margaux-bottle.jpg",
+    "bottle": "/images/pavillonrouge-bottle.jpg",
     "chateau": "/images/margaux-estate.jpg",
     "region": "/images/bordeaux-map.jpg"
     }
@@ -123,7 +123,7 @@
     }
   },
 {
-    "product": "Tignanello,
+    "product": "Tignanello",
     "region": "Chianti Classico",
     "images": {
     "bottle": "/images/tignanello-bottle.jpg",
