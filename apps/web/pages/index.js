@@ -95,6 +95,7 @@ export default function Home() {
             DA_Finish={2015}
           />
         </div>
+        
 <div style={{ marginTop: "40px" }}>
   <BestValueTop10 rows={rows} selectedProduct={product} selectedVintage={vintage} />
 </div>
