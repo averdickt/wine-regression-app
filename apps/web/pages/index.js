@@ -5,6 +5,7 @@ import Dropdown from "../src/components/Dropdown";
 import ProductRegressionChart from "../src/components/ProductRegressionChart";
 import PriceScoreVintageChart from "../src/components/PriceScoreVintageChart";
 import WineDetailPanel from "../src/components/WineDetailPanel"; // new
+import BestValueTop10 from "../src/components/BestValueTop10";
 
 export default function Home() {
   const [rows, setRows] = useState([]);
