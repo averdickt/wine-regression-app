@@ -62,8 +62,8 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
   }
 
   // --- Determine x-axis range ---
-  const minStart = Math.min(...top10.map((r) => r.DA_Start)) - 3;
-  const maxFinish = Math.max(...top10.map((r) => r.DA_Finish)) + 3;
+  const minStart = Math.min(...top10.map((r) => r.DA_Start || 2000)) - 3; // Fallback to 2000
+  const maxFinish = Math.max(...top10.map((r) => r.DA_Finish || 2030)) + 3; // Fallback to 2030
 
   // --- Color bars by drinking window ---
   const currentYear = 2025;
@@ -169,4 +169,27 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
               shape={(props) => {
                 const { x, y, payload, width: baseWidth, height } = props;
                 const startX = (payload.DA_Start - minStart) * (baseWidth / (maxFinish - minStart));
-                const barWidth = Math.max(payload.DA_Finish - payload.DA_Start
+                const barWidth = Math.max(payload.DA_Finish - payload.DA_Start, 1) * (baseWidth / (maxFinish - minStart));
+                return (
+                  <rect
+                    x={x + startX}
+                    y={y}
+                    width={barWidth}
+                    height={height}
+                    fill={getBarColor(payload)}
+                  />
+                );
+              }}
+            >
+              <LabelList
+                dataKey={(d) => `${d.DA_Start}-${d.DA_Finish}`}
+                position="insideRight"
+                fill="#000"
+              />
+            </Bar>
+          </ComposedChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
