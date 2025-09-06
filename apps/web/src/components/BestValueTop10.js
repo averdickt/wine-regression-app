@@ -33,6 +33,7 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
       .map((r) => ({
         ...r,
         Label: `${r.Product} (${r.Vintage})`,
+        DrinkingWindowStart: r.DA_Start, // For precise start positioning
         DrinkingWindowWidth: r.DA_Finish - r.DA_Start, // Raw width for scaling
       }))
       .sort((a, b) => a.PriceValueDiff - b.PriceValueDiff)
@@ -62,16 +63,32 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
   }
 
   // --- Determine x-axis range ---
-  const minStart = Math.min(...top10.map((r) => r.DA_Start || 2000)) - 3; // Start at lowest DA_Start - 3
-  const maxFinish = Math.max(...top10.map((r) => r.DA_Finish || 2030)) + 3; // End at highest DA_Finish + 3
+  const minStart = Math.min(...top10.map((r) => r.DA_Start || 2000)) - 3; // Dynamic start
+  const maxFinish = Math.max(...top10.map((r) => r.DA_Finish || 2030)) + 3; // Dynamic end
   const xAxisRange = maxFinish - minStart; // Total range for scaling
 
-  // --- Color bars by drinking window ---
+  // --- Color bars by drinking window segments ---
   const currentYear = 2025;
-  const getBarColor = (r) => {
-    if (currentYear < r.DA_Start) return "red";
-    if (currentYear > r.DA_Finish) return "yellow";
-    return "green";
+  const getSegmentColors = (start, finish) => {
+    const segments = [];
+    if (start < currentYear) {
+      segments.push({ x: 0, width: Math.max(currentYear - start, 0) / xAxisRange * 100, color: "yellow" });
+    }
+    if (start <= currentYear && currentYear <= finish) {
+      segments.push({
+        x: (currentYear - start) / xAxisRange * 100,
+        width: Math.max(finish - currentYear, 0) / xAxisRange * 100,
+        color: "green",
+      });
+    }
+    if (finish > currentYear) {
+      segments.push({
+        x: (finish - currentYear) / xAxisRange * 100,
+        width: Math.max(finish - currentYear, 0) / xAxisRange * 100,
+        color: "red",
+      });
+    }
+    return segments;
   };
 
   return (
@@ -169,16 +186,23 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
               barSize={20}
               shape={(props) => {
                 const { x, y, payload, width: baseWidth, height } = props;
-                const startOffset = (payload.DA_Start - minStart) / xAxisRange; // Proportion of range
-                const barWidth = (payload.DA_Finish - payload.DA_Start) / xAxisRange * baseWidth; // Scaled width
+                const startOffset = (payload.DA_Start - minStart) / xAxisRange; // Proportion from minStart
+                const fullWidth = baseWidth; // Use full available width
+                const segments = getSegmentColors(payload.DA_Start, payload.DA_Finish);
+
                 return (
-                  <rect
-                    x={x + startOffset * baseWidth}
-                    y={y}
-                    width={barWidth}
-                    height={height}
-                    fill={getBarColor(payload)}
-                  />
+                  <g>
+                    {segments.map((segment, index) => (
+                      <rect
+                        key={index}
+                        x={x + startOffset * baseWidth}
+                        y={y}
+                        width={segment.width * (baseWidth / 100)} // Scale to percentage of baseWidth
+                        height={height}
+                        fill={segment.color}
+                      />
+                    ))}
+                  </g>
                 );
               }}
             >
