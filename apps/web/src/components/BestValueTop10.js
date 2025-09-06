@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect } from "react";
+import React, { useMemo } from "react";
 import {
   ResponsiveContainer,
   ComposedChart,
@@ -11,7 +11,6 @@ import {
 } from "recharts";
 
 export default function BestValueTop10({ rows, selectedProduct, selectedVintage }) {
-  // --- Find the selected wine ---
   const selectedRow = rows.find(
     (r) => r.Product === selectedProduct && r.Vintage === selectedVintage
   );
@@ -19,11 +18,10 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
   const region = selectedRow?.Region;
   const wineClass = selectedRow?.Wine_Class;
 
-  // --- Filter and sort top 10 wines ---
   const top10 = useMemo(() => {
     if (!selectedScore || !region || !wineClass) return [];
 
-    const filtered = rows
+    return rows
       .filter(
         (r) =>
           r.Region === region &&
@@ -37,16 +35,11 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
       .map((r) => ({
         ...r,
         Label: `${r.Product} (${r.Vintage})`,
-        DrinkingWindowStart: r.DA_Start,
-        DrinkingWindowWidth: r.DA_Finish - r.DA_Start,
       }))
       .sort((a, b) => a.PriceValueDiff - b.PriceValueDiff)
       .slice(0, 10);
-
-    return filtered;
   }, [rows, selectedScore, region, wineClass]);
 
-  // --- Early return if no valid selection ---
   if (!selectedScore) {
     return <p>Please select a Product and Vintage with a score.</p>;
   }
@@ -58,32 +51,15 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
     );
   }
 
-  // --- Determine x-axis range ---
   const minStart = Math.min(...top10.map((r) => r.DA_Start)) - 3;
   const maxFinish = Math.max(...top10.map((r) => r.DA_Finish)) + 3;
+  const currentYear = new Date().getFullYear();
 
-  // --- Segment coloring ---
-  const currentYear = 2025;
-  const getSegmentColors = (start, finish) => {
-    const segments = [];
-    if (currentYear < start) {
-      segments.push({ start, end: finish, color: "yellow" });
-    } else if (currentYear > finish) {
-      segments.push({ start, end: finish, color: "red" });
-    } else {
-      if (start < currentYear) {
-        segments.push({ start, end: currentYear, color: "yellow" });
-      }
-      segments.push({ start: Math.max(start, currentYear), end: finish, color: "green" });
-    }
-    return segments;
+  const getBottles = (caseFormat) => {
+    if (!caseFormat) return 12;
+    const num = parseInt(caseFormat.split(" x ")[0], 10);
+    return isNaN(num) ? 12 : num;
   };
-
-  // --- Debug logs ---
-  useEffect(() => {
-    console.log("Rendered top10:", top10);
-    console.log("Final X-axis range used:", { minStart, maxFinish });
-  }, [top10, minStart, maxFinish]);
 
   return (
     <div style={{ marginTop: "20px" }}>
@@ -126,24 +102,24 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
         </thead>
         <tbody>
           {top10.map((r, i) => {
-            const bottles = parseInt(r.Case_Format?.split(" x ")[0], 10) || 12;
+            const bottles = getBottles(r.Case_Format);
             return (
               <tr key={i}>
                 <td style={{ border: "1px solid #ccc", padding: "6px" }}>{r.Region}</td>
                 <td style={{ border: "1px solid #ccc", padding: "6px" }}>{r.Product}</td>
                 <td style={{ border: "1px solid #ccc", padding: "6px" }}>{r.Vintage}</td>
                 <td style={{ border: "1px solid #ccc", padding: "6px" }}>
-                  ${r.Price?.toFixed(2)}
+                  ${r.Price.toFixed(2)}
                 </td>
                 <td style={{ border: "1px solid #ccc", padding: "6px" }}>
-                  ${r.PriceValueDiff?.toFixed(2)}
+                  ${r.PriceValueDiff.toFixed(2)}
                 </td>
                 <td style={{ border: "1px solid #ccc", padding: "6px" }}>{r.Bid_Qty}</td>
                 <td style={{ border: "1px solid #ccc", padding: "6px" }}>
                   ${(r.Bid_Per_Case / bottles).toFixed(2)}
                 </td>
                 <td style={{ border: "1px solid #ccc", padding: "6px" }}>
-                  {r.Spread?.toFixed(4)}
+                  {r.Spread.toFixed(4)}
                 </td>
                 <td style={{ border: "1px solid #ccc", padding: "6px" }}>
                   ${(r.Offer_Per_Case / bottles).toFixed(2)}
@@ -161,68 +137,75 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
           <ComposedChart
             layout="vertical"
             data={top10}
-            margin={{ top: 20, right: 30, left: 120, bottom: 20 }}
+            margin={{ top: 20, right: 30, left: 150, bottom: 40 }}
           >
             <XAxis
-  type="number"
-  domain={[minStart, maxFinish]}
-  tickCount={Math.min(maxFinish - minStart, 20)} // cap ticks
-  allowDecimals={false}
-  scale="linear"
-  tickFormatter={(value) => value} // show full year
-  label={{ value: "Drinking Window (Years)", position: "insideBottom", offset: -5 }}
-  tick={{ fontSize: 12, angle: -45, textAnchor: "end" }} // rotate labels
-/>
-            <YAxis dataKey="Label" type="category" width={200} tick={{ fontSize: 12 }} />
+              type="number"
+              domain={[minStart, maxFinish]}
+              allowDecimals={false}
+              label={{
+                value: "Drinking Window (Years)",
+                position: "insideBottom",
+                offset: -10,
+              }}
+            />
+            <YAxis dataKey="Label" type="category" width={250} tick={{ fontSize: 12 }} />
             <Tooltip
-              formatter={(_, __, props) => [
-                `${props.payload.DA_Start} - ${props.payload.DA_Finish}`,
+              formatter={(value, name, props) => [
+                `${props.payload.DA_Start} – ${props.payload.DA_Finish}`,
                 "Drinking Window",
               ]}
             />
             <Legend
               verticalAlign="top"
               height={36}
-              wrapperStyle={{ paddingBottom: "10px" }}
               formatter={(value) => {
                 const colorMap = {
-                  yellow: "Not drinkable",
-                  green: "Drinkable",
-                  red: "Past",
+                  yellow: "Too Early",
+                  green: "Drink Now",
+                  red: "Past Best",
                 };
                 return colorMap[value] || value;
               }}
             />
             <Bar
-              dataKey="DrinkingWindowWidth"
+              dataKey="DA_Finish"
               barSize={20}
               shape={(props) => {
-                const { y, height, payload, x, width } = props;
-                if (!payload) return null;
+                const { y, height, payload, xAxis } = props;
+                const startX = xAxis.scale(payload.DA_Start);
+                const endX = xAxis.scale(payload.DA_Finish);
 
-                const segments = getSegmentColors(payload.DA_Start, payload.DA_Finish);
+                const segments = [];
+                if (payload.DA_Start < currentYear) {
+                  const preEnd = Math.min(currentYear, payload.DA_Finish);
+                  segments.push({
+                    x: startX,
+                    width: xAxis.scale(preEnd) - startX,
+                    color: "yellow",
+                  });
+                }
+                if (payload.DA_Start <= currentYear && currentYear <= payload.DA_Finish) {
+                  const greenStart = Math.max(payload.DA_Start, currentYear);
+                  segments.push({
+                    x: xAxis.scale(greenStart),
+                    width: xAxis.scale(payload.DA_Finish) - xAxis.scale(greenStart),
+                    color: "green",
+                  });
+                }
+                if (payload.DA_Finish < currentYear) {
+                  segments.push({
+                    x: startX,
+                    width: endX - startX,
+                    color: "red",
+                  });
+                }
 
                 return (
                   <g>
-                    {segments.map((seg, i) => {
-                      // Protect against scale being undefined
-                      const scale = props.xAxis?.scale || ((val) => val);
-                      const segStart = scale(seg.start) ?? x;
-                      const segEnd = scale(seg.end) ?? x + width;
-                      const rectX = Math.min(segStart, segEnd);
-                      const rectWidth = Math.abs(segEnd - segStart);
-
-                      return (
-                        <rect
-                          key={i}
-                          x={rectX}
-                          y={y}
-                          width={rectWidth}
-                          height={height}
-                          fill={seg.color}
-                        />
-                      );
-                    })}
+                    {segments.map((s, i) => (
+                      <rect key={i} x={s.x} y={y} width={s.width} height={height} fill={s.color} />
+                    ))}
                   </g>
                 );
               }}
