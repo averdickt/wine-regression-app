@@ -10,8 +10,8 @@ import BestValueTop10 from "../src/components/BestValueTop10";
 export default function Home() {
   const [rows, setRows] = useState([]);
   const [product, setProduct] = useState("Chateau Margaux Premier Cru Classe");
-  const [vintage, setVintage] = useState("");
-  const [region, setRegion] = useState("");
+  const [vintage, setVintage] = useState("2010");
+  const [region, setRegion] = useState("Bordeaux");
 
   // --- AUTOLOAD from public/processed_wine_data.xlsx ---
   useEffect(() => {
