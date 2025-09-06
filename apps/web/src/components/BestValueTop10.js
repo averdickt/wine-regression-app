@@ -61,16 +61,15 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
   // --- Determine x-axis range ---
   const minStart = Math.min(...top10.map((r) => r.DA_Start)) - 3;
   const maxFinish = Math.max(...top10.map((r) => r.DA_Finish)) + 3;
-  const xAxisRange = maxFinish - minStart;
 
   // --- Segment coloring ---
   const currentYear = 2025;
   const getSegmentColors = (start, finish) => {
     const segments = [];
     if (currentYear < start) {
-      segments.push({ start, end: finish, color: "yellow" }); // Not drinkable yet
+      segments.push({ start, end: finish, color: "yellow" });
     } else if (currentYear > finish) {
-      segments.push({ start, end: finish, color: "red" }); // Past window
+      segments.push({ start, end: finish, color: "red" });
     } else {
       if (start < currentYear) {
         segments.push({ start, end: currentYear, color: "yellow" });
@@ -194,24 +193,27 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
               dataKey="DrinkingWindowWidth"
               barSize={20}
               shape={(props) => {
-                const { y, height, payload, xAxis } = props;
-                const xScale = xAxis.scale;
+                const { y, height, payload, x, width } = props;
+                if (!payload) return null;
+
                 const segments = getSegmentColors(payload.DA_Start, payload.DA_Finish);
 
                 return (
                   <g>
                     {segments.map((seg, i) => {
-                      const segStart = xScale(seg.start);
-                      const segEnd = xScale(seg.end);
-                      const x = Math.min(segStart, segEnd);
-                      const width = Math.abs(segEnd - segStart);
+                      // Protect against scale being undefined
+                      const scale = props.xAxis?.scale || ((val) => val);
+                      const segStart = scale(seg.start) ?? x;
+                      const segEnd = scale(seg.end) ?? x + width;
+                      const rectX = Math.min(segStart, segEnd);
+                      const rectWidth = Math.abs(segEnd - segStart);
 
                       return (
                         <rect
                           key={i}
-                          x={x}
+                          x={rectX}
                           y={y}
-                          width={width}
+                          width={rectWidth}
                           height={height}
                           fill={seg.color}
                         />
