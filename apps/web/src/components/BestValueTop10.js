@@ -1,4 +1,3 @@
-// src/components/BestValueTop10.js
 import React, { useMemo } from "react";
 import {
   ResponsiveContainer,
@@ -12,50 +11,71 @@ import {
 } from "recharts";
 
 export default function BestValueTop10({ rows, selectedProduct, selectedVintage }) {
-  // --- find the score of selected wine ---
+  // --- Find the selected wine ---
   const selectedRow = rows.find(
     (r) => r.Product === selectedProduct && r.Vintage === selectedVintage
   );
   const selectedScore = selectedRow?.Score;
-
-  // --- filter same region & wine_class ---
   const region = selectedRow?.Region;
   const wineClass = selectedRow?.Wine_Class;
 
+  // --- Filter and sort top 10 wines ---
   const top10 = useMemo(() => {
     if (!selectedScore || !region || !wineClass) return [];
 
-    return rows
-      .filter((r) => r.Region === region && r.Wine_Class === wineClass)
+    const filtered = rows
+      .filter(
+        (r) =>
+          r.Region === region &&
+          r.Wine_Class === wineClass &&
+          r.Score === selectedScore
+      )
       .map((r) => ({
         ...r,
         Label: `${r.Product} (${r.Vintage})`,
+        DrinkingWindow: [r.DA_Start, r.DA_Finish], // For chart
       }))
       .sort((a, b) => a.PriceValueDiff - b.PriceValueDiff)
       .slice(0, 10);
+
+    console.log("Top 10 wines:", filtered); // Debug log
+    return filtered;
   }, [rows, selectedScore, region, wineClass]);
 
+  // --- Handle case format for per-bottle calculations ---
+  const getBottles = (caseFormat) => {
+    if (!caseFormat) return 12;
+    const num = parseInt(caseFormat.split(" x ")[0], 10);
+    return isNaN(num) ? 12 : num;
+  };
+
+  // --- Early return if no valid selection ---
   if (!selectedScore) {
     return <p>Please select a Product and Vintage with a score.</p>;
   }
   if (top10.length === 0) {
-    return <p>No matching wines found for region/class.</p>;
+    return (
+      <p>
+        No matching wines found for Region: {region}, Class: {wineClass}, Score: {selectedScore}.
+      </p>
+    );
   }
 
-  // --- determine x-axis range ---
-  const minStart = Math.min(...top10.map((r) => r.DA_Start || r.Vintage)) - 3;
-  const maxFinish = Math.max(...top10.map((r) => r.DA_Finish || r.Vintage)) + 3;
+  // --- Determine x-axis range ---
+  const minStart = Math.min(...top10.map((r) => r.DA_Start)) - 3;
+  const maxFinish = Math.max(...top10.map((r) => r.DA_Finish)) + 3;
 
-  // --- colour bars by drinking window ---
+  // --- Color bars by drinking window ---
+  const currentYear = 2025;
   const getBarColor = (r) => {
-    if (r.Vintage < r.DA_Start) return "red";
-    if (r.Vintage > r.DA_Finish) return "yellow";
+    if (currentYear < r.DA_Start) return "red";
+    if (currentYear > r.DA_Finish) return "yellow";
     return "green";
   };
 
   return (
     <div style={{ marginTop: "20px" }}>
-      <h2>Top 10 Best Value Wines (Same Region & Class)</h2>
+      <h2>Top 10 Best Value Wines (Same Region, Class, and Score)</h2>
 
       {/* --- Table --- */}
       <table
@@ -74,9 +94,9 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
               "Price",
               "PriceValueDiff",
               "Bid_Qty",
-              "Bid_Per_Case",
+              "Bid_Per_Bottle",
               "Spread",
-              "Offer_Per_Case",
+              "Offer_Per_Bottle",
               "Offer_Qty",
             ].map((h) => (
               <th
@@ -93,24 +113,33 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
           </tr>
         </thead>
         <tbody>
-          {top10.map((r, i) => (
-            <tr key={i}>
-              <td style={{ border: "1px solid #ccc", padding: "6px" }}>{r.Region}</td>
-              <td style={{ border: "1px solid #ccc", padding: "6px" }}>{r.Product}</td>
-              <td style={{ border: "1px solid #ccc", padding: "6px" }}>{r.Vintage}</td>
-              <td style={{ border: "1px solid #ccc", padding: "6px" }}>{r.Price}</td>
-              <td style={{ border: "1px solid #ccc", padding: "6px" }}>
-                {r.PriceValueDiff}
-              </td>
-              <td style={{ border: "1px solid #ccc", padding: "6px" }}>{r.Bid_Qty}</td>
-              <td style={{ border: "1px solid #ccc", padding: "6px" }}>{r.Bid_Per_Case}</td>
-              <td style={{ border: "1px solid #ccc", padding: "6px" }}>{r.Spread}</td>
-              <td style={{ border: "1px solid #ccc", padding: "6px" }}>
-                {r.Offer_Per_Case}
-              </td>
-              <td style={{ border: "1px solid #ccc", padding: "6px" }}>{r.Offer_Qty}</td>
-            </tr>
-          ))}
+          {top10.map((r, i) => {
+            const bottles = getBottles(r.Case_Format);
+            return (
+              <tr key={i}>
+                <td style={{ border: "1px solid #ccc", padding: "6px" }}>{r.Region}</td>
+                <td style={{ border: "1px solid #ccc", padding: "6px" }}>{r.Product}</td>
+                <td style={{ border: "1px solid #ccc", padding: "6px" }}>{r.Vintage}</td>
+                <td style={{ border: "1px solid #ccc", padding: "6px" }}>
+                  ${r.Price.toFixed(2)}
+                </td>
+                <td style={{ border: "1px solid #ccc", padding: "6px" }}>
+                  ${r.PriceValueDiff.toFixed(2)}
+                </td>
+                <td style={{ border: "1px solid #ccc", padding: "6px" }}>{r.Bid_Qty}</td>
+                <td style={{ border: "1px solid #ccc", padding: "6px" }}>
+                  ${(r.Bid_Per_Case / bottles).toFixed(2)}
+                </td>
+                <td style={{ border: "1px solid #ccc", padding: "6px" }}>
+                  {r.Spread.toFixed(4)}
+                </td>
+                <td style={{ border: "1px solid #ccc", padding: "6px" }}>
+                  ${(r.Offer_Per_Case / bottles).toFixed(2)}
+                </td>
+                <td style={{ border: "1px solid #ccc", padding: "6px" }}>{r.Offer_Qty}</td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
 
@@ -125,15 +154,37 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
             <XAxis
               type="number"
               domain={[minStart, maxFinish]}
-              label={{ value: "Vintage / Years", position: "insideBottom", offset: -5 }}
+              label={{ value: "Drinking Window (Years)", position: "insideBottom", offset: -5 }}
             />
             <YAxis dataKey="Label" type="category" width={200} tick={{ fontSize: 12 }} />
-            <Tooltip />
-            <Bar dataKey="Vintage" barSize={20}>
-              {top10.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={getBarColor(entry)} />
-              ))}
-              <LabelList dataKey="Vintage" position="insideRight" />
+            <Tooltip
+              formatter={(value, name, props) => [
+                `${props.payload.DA_Start} - ${props.payload.DA_Finish}`,
+                "Drinking Window",
+              ]}
+            />
+            <Bar
+              dataKey="DrinkingWindow"
+              barSize={20}
+              shape={(props) => {
+                const { x, y, payload, height } = props;
+                const width = props.width || (payload.DA_Finish - payload.DA_Start) * (props.xAxis.scale.bandwidth || 1);
+                return (
+                  <rect
+                    x={x}
+                    y={y}
+                    width={width}
+                    height={height}
+                    fill={getBarColor(payload)}
+                  />
+                );
+              }}
+            >
+              <LabelList
+                dataKey={(d) => `${d.DA_Start}-${d.DA_Finish}`}
+                position="insideRight"
+                fill="#000"
+              />
             </Bar>
           </ComposedChart>
         </ResponsiveContainer>
