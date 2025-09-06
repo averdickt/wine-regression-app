@@ -62,8 +62,8 @@ No matching wines found for Region: {region}, Class: {wineClass}, Score: {select
 }
 
 // — Determine x-axis range —
-const minStart = Math.min(…top10.map((r) => r.DA_Start)) - 3;
-const maxFinish = Math.max(…top10.map((r) => r.DA_Finish)) + 3;
+const minStart = Math.min(...top10.map((r) => r.DA_Start)) - 3;
+const maxFinish = Math.max(...top10.map((r) => r.DA_Finish)) + 3;
 
 // — Segment coloring —
 const currentYear = 2025;
@@ -84,12 +84,12 @@ return segments;
 
 // — Debug logs —
 useEffect(() => {
-console.log(“Rendered top10:”, top10);
-console.log(“Final X-axis range used:”, { minStart, maxFinish });
+console.log("Rendered top10:", top10);
+console.log("Final X-axis range used:", { minStart, maxFinish });
 }, [top10, minStart, maxFinish]);
 
 return (
-<div style={{ marginTop: “20px” }}>
+<div style={{ marginTop: "20px" }}>
 <h2>Top 10 Best Value Wines (Same Region, Class, and Score)</h2>
 
 
