@@ -30,7 +30,7 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
           r.Region === region &&
           r.Wine_Class === wineClass &&
           r.Score === selectedScore &&
-          r.DA_Start && r.DA_Finish // Ensure valid drinking window
+          r.DA_Start && r.DA_Finish && r.DA_Start >= 1900 && r.DA_Finish >= r.DA_Start // Stricter validation
       )
       .map((r) => ({
         ...r,
@@ -41,7 +41,10 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
       .sort((a, b) => a.PriceValueDiff - b.PriceValueDiff)
       .slice(0, 10);
 
-    console.log("Top 10 wines:", filtered); // Debug log
+    // Log DA_Start values and top 10 for debugging
+    const daStarts = filtered.map((r) => r.DA_Start);
+    console.log("DA_Start values:", daStarts);
+    console.log("Top 10 wines:", filtered);
     return filtered;
   }, [rows, selectedScore, region, wineClass]);
 
@@ -65,31 +68,32 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
   }
 
   // --- Determine x-axis range ---
-  const minStart = Math.min(...top10.map((r) => r.DA_Start || 2000)) - 3; // Dynamic start
-  const maxFinish = Math.max(...top10.map((r) => r.DA_Finish || 2030)) + 3; // Dynamic end
-  const xAxisRange = maxFinish - minStart; // Total range for scaling
+  const minStart = Math.min(...top10.map((r) => (r.DA_Start >= 1900 ? r.DA_Start : 2000))) - 3;
+  const maxFinish = Math.max(...top10.map((r) => (r.DA_Finish >= 1900 ? r.DA_Finish : 2030))) + 3;
+  const xAxisRange = maxFinish - minStart;
   console.log("X-axis range:", { minStart, maxFinish }); // Debug X-axis range
 
-  // --- Color bars by drinking window segments ---
+  // --- Color bars by drinking window segments relative to 2025 ---
   const currentYear = 2025;
   const getSegmentColors = (start, finish) => {
     const segments = [];
-    const totalWidthPercent = 100; // Full width in percentage
+    const totalWidthPercent = 100;
     const startOffset = ((start - minStart) / xAxisRange) * totalWidthPercent;
     const windowWidthPercent = ((finish - start) / xAxisRange) * totalWidthPercent;
 
     if (start < currentYear) {
-      const preCurrentWidth = Math.max((currentYear - start) / xAxisRange * totalWidthPercent, 0);
+      const preCurrentWidth = Math.min((currentYear - start) / xAxisRange * totalWidthPercent, windowWidthPercent);
       segments.push({ x: startOffset, width: preCurrentWidth, color: "yellow" });
     }
     if (start <= currentYear && currentYear <= finish) {
-      const greenStart = Math.max((currentYear - start) / xAxisRange * totalWidthPercent, 0);
-      const greenWidth = Math.max((finish - currentYear) / xAxisRange * totalWidthPercent, 0);
-      segments.push({ x: startOffset + greenStart, width: greenWidth, color: "green" });
+      const greenStartOffset = ((currentYear - start) / xAxisRange) * totalWidthPercent;
+      const greenWidth = Math.min((finish - currentYear) / xAxisRange * totalWidthPercent, windowWidthPercent - greenStartOffset);
+      segments.push({ x: startOffset + greenStartOffset, width: greenWidth, color: "green" });
     }
     if (finish > currentYear) {
-      const postCurrentStart = Math.max((finish - currentYear) / xAxisRange * totalWidthPercent, 0);
-      segments.push({ x: startOffset + postCurrentStart, width: windowWidthPercent - postCurrentStart, color: "red" });
+      const postCurrentStart = ((finish - currentYear) / xAxisRange) * totalWidthPercent;
+      const postCurrentWidth = Math.min(windowWidthPercent - postCurrentStart, windowWidthPercent);
+      segments.push({ x: startOffset + postCurrentStart, width: postCurrentWidth, color: "red" });
     }
     return segments;
   };
@@ -210,9 +214,9 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
                     {segments.map((segment, index) => (
                       <rect
                         key={index}
-                        x={x + segment.x}
+                        x={x + segment.x / 100 * baseWidth}
                         y={y}
-                        width={segment.width}
+                        width={segment.width / 100 * baseWidth}
                         height={height}
                         fill={segment.color}
                       />
