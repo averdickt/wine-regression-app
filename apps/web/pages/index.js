@@ -96,9 +96,9 @@ export default function Home() {
           />
         </div>
         
-<div style={{ marginTop: "40px" }}>
-  <BestValueTop10 rows={rows} selectedProduct={product} selectedVintage={vintage} />
-</div>
+        <div style={{ marginTop: "40px" }}>
+          <BestValueTop10 rows={rows} selectedProduct={product} selectedVintage={vintage} />
+        </div>
       </div>
 
       {/* RIGHT SIDE: detail sidebar */}
