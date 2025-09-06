@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect } from "react";
 import {
   ResponsiveContainer,
   ComposedChart,
@@ -7,7 +7,6 @@ import {
   Tooltip,
   Bar,
   LabelList,
-  Cell,
   Legend,
 } from "recharts";
 
@@ -30,7 +29,7 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
           r.Region === region &&
           r.Wine_Class === wineClass &&
           r.Score === selectedScore &&
-          r.DA_Start && r.DA_Finish && r.DA_Start >= 1900 && r.DA_Finish >= r.DA_Start // Stricter validation
+          r.DA_Start && r.DA_Finish && r.DA_Start >= 1900 && r.DA_Finish >= r.DA_Start
       )
       .map((r) => ({
         ...r,
@@ -71,7 +70,7 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
   const minStart = Math.min(...top10.map((r) => (r.DA_Start >= 1900 ? r.DA_Start : 2000))) - 3;
   const maxFinish = Math.max(...top10.map((r) => (r.DA_Finish >= 1900 ? r.DA_Finish : 2030))) + 3;
   const xAxisRange = maxFinish - minStart;
-  console.log("X-axis range:", { minStart, maxFinish }); // Debug X-axis range
+  console.log("Calculated X-axis range:", { minStart, maxFinish, xAxisRange });
 
   // --- Color bars by drinking window segments relative to 2025 ---
   const currentYear = 2025;
@@ -97,6 +96,12 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
     }
     return segments;
   };
+
+  // --- Debug effect to log final top10 and range ---
+  useEffect(() => {
+    console.log("Rendered top10:", top10);
+    console.log("Final X-axis range used:", { minStart, maxFinish });
+  }, [top10, minStart, maxFinish]);
 
   return (
     <div style={{ marginTop: "20px" }}>
@@ -179,6 +184,7 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
             <XAxis
               type="number"
               domain={[minStart, maxFinish]}
+              tickFormatter={(value) => Math.round(value)} // Ensure integer ticks
               label={{ value: "Drinking Window (Years)", position: "insideBottom", offset: -5 }}
             />
             <YAxis dataKey="Label" type="category" width={200} tick={{ fontSize: 12 }} />
@@ -207,16 +213,19 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
               shape={(props) => {
                 const { x, y, payload, width: baseWidth, height } = props;
                 const startOffset = ((payload.DA_Start - minStart) / xAxisRange) * baseWidth;
+                const totalWidth = baseWidth; // Use full width for the range
                 const segments = getSegmentColors(payload.DA_Start, payload.DA_Finish);
+
+                console.log("Shape debug:", { payload, startOffset, totalWidth, segments }); // Debug shape
 
                 return (
                   <g>
                     {segments.map((segment, index) => (
                       <rect
                         key={index}
-                        x={x + segment.x / 100 * baseWidth}
+                        x={x + segment.x / 100 * totalWidth}
                         y={y}
-                        width={segment.width / 100 * baseWidth}
+                        width={segment.width / 100 * totalWidth}
                         height={height}
                         fill={segment.color}
                       />
