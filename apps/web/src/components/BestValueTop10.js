@@ -33,7 +33,7 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
       .map((r) => ({
         ...r,
         Label: `${r.Product} (${r.Vintage})`,
-        DrinkingWindow: [r.DA_Start, r.DA_Finish], // For chart
+        DrinkingWindowWidth: Math.max(r.DA_Finish - r.DA_Start, 1), // Ensure positive width
       }))
       .sort((a, b) => a.PriceValueDiff - b.PriceValueDiff)
       .slice(0, 10);
@@ -164,31 +164,9 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
               ]}
             />
             <Bar
-              dataKey="DrinkingWindow"
+              dataKey="DrinkingWindowWidth"
               barSize={20}
               shape={(props) => {
-                const { x, y, payload, height } = props;
-                const width = props.width || (payload.DA_Finish - payload.DA_Start) * (props.xAxis.scale.bandwidth || 1);
-                return (
-                  <rect
-                    x={x}
-                    y={y}
-                    width={width}
-                    height={height}
-                    fill={getBarColor(payload)}
-                  />
-                );
-              }}
-            >
-              <LabelList
-                dataKey={(d) => `${d.DA_Start}-${d.DA_Finish}`}
-                position="insideRight"
-                fill="#000"
-              />
-            </Bar>
-          </ComposedChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
-  );
-}
+                const { x, y, payload, width: baseWidth, height } = props;
+                const startX = (payload.DA_Start - minStart) * (baseWidth / (maxFinish - minStart));
+                const barWidth = Math.max(payload.DA_Finish - payload.DA_Start
