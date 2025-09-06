@@ -8,7 +8,7 @@ Tooltip,
 Bar,
 LabelList,
 Legend,
-} from “recharts”;
+} from "recharts";
 
 export default function BestValueTop10({ rows, selectedProduct, selectedVintage }) {
 // — Find the selected wine —
@@ -23,7 +23,7 @@ const wineClass = selectedRow?.Wine_Class;
 const top10 = useMemo(() => {
 if (!selectedScore || !region || !wineClass) return [];
 
-```
+
 const filtered = rows
   .filter(
     (r) =>
@@ -45,7 +45,7 @@ const filtered = rows
   .slice(0, 10);
 
 return filtered;
-```
+
 
 }, [rows, selectedScore, region, wineClass]);
 
@@ -92,7 +92,7 @@ return (
 <div style={{ marginTop: “20px” }}>
 <h2>Top 10 Best Value Wines (Same Region, Class, and Score)</h2>
 
-```
+
   {/* --- Table --- */}
   <table
     style={{
@@ -242,7 +242,7 @@ return (
     </ResponsiveContainer>
   </div>
 </div>
-```
+
 
 );
 }
