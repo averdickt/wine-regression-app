@@ -8,6 +8,7 @@ import {
   Tooltip,
   Bar,
   LabelList,
+  Cell,
 } from "recharts";
 
 export default function BestValueTop10({ rows, selectedProduct, selectedVintage }) {
@@ -36,6 +37,9 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
 
   if (!selectedScore) {
     return <p>Please select a Product and Vintage with a score.</p>;
+  }
+  if (top10.length === 0) {
+    return <p>No matching wines found for region/class.</p>;
   }
 
   // --- determine x-axis range ---
@@ -123,25 +127,14 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
               domain={[minStart, maxFinish]}
               label={{ value: "Vintage / Years", position: "insideBottom", offset: -5 }}
             />
-            <YAxis
-              dataKey="Label"
-              type="category"
-              width={200}
-              tick={{ fontSize: 12 }}
-            />
+            <YAxis dataKey="Label" type="category" width={200} tick={{ fontSize: 12 }} />
             <Tooltip />
-
-            {top10.map((r, i) => (
-              <Bar
-                key={i}
-                dataKey="Vintage"
-                data={[r]}
-                barSize={20}
-                fill={getBarColor(r)}
-              >
-                <LabelList dataKey="Vintage" position="insideRight" />
-              </Bar>
-            ))}
+            <Bar dataKey="Vintage" barSize={20}>
+              {top10.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={getBarColor(entry)} />
+              ))}
+              <LabelList dataKey="Vintage" position="insideRight" />
+            </Bar>
           </ComposedChart>
         </ResponsiveContainer>
       </div>
