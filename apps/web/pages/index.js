@@ -54,10 +54,13 @@ export default function Home() {
 
   const filteredData = rows.filter((r) => r.Product === product);
 
-  // whenever product changes, update region
+  // whenever product changes, update region and maybe vintage
   useEffect(() => {
     if (filteredData.length > 0) {
       setRegion(filteredData[0].Region || "");
+      // if vintage is not set or not valid for current product, pick first available
+      if (!vintage || !filteredData.some(r => r.Vintage === vintage)) {
+        setVintage(filteredData[0].Vintage);
     }
   }, [product, filteredData]);
 
