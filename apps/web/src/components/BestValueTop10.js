@@ -164,11 +164,15 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
             margin={{ top: 20, right: 30, left: 120, bottom: 20 }}
           >
             <XAxis
-              type="number"
-              domain={[minStart, maxFinish]}
-              tickFormatter={(value) => Math.round(value)}
-              label={{ value: "Drinking Window (Years)", position: "insideBottom", offset: -5 }}
-            />
+  type="number"
+  domain={[minStart, maxFinish]}
+  tickCount={Math.min(maxFinish - minStart, 20)} // cap ticks
+  allowDecimals={false}
+  scale="linear"
+  tickFormatter={(value) => value} // show full year
+  label={{ value: "Drinking Window (Years)", position: "insideBottom", offset: -5 }}
+  tick={{ fontSize: 12, angle: -45, textAnchor: "end" }} // rotate labels
+/>
             <YAxis dataKey="Label" type="category" width={200} tick={{ fontSize: 12 }} />
             <Tooltip
               formatter={(_, __, props) => [
