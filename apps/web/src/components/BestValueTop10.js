@@ -29,7 +29,10 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
           r.Region === region &&
           r.Wine_Class === wineClass &&
           r.Score === selectedScore &&
-          r.DA_Start && r.DA_Finish && r.DA_Start >= 1900 && r.DA_Finish >= r.DA_Start
+          r.DA_Start &&
+          r.DA_Finish &&
+          r.DA_Start >= 1900 &&
+          r.DA_Finish >= r.DA_Start
       )
       .map((r) => ({
         ...r,
@@ -40,19 +43,8 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
       .sort((a, b) => a.PriceValueDiff - b.PriceValueDiff)
       .slice(0, 10);
 
-    // Log DA_Start values and top 10 for debugging
-    const daStarts = filtered.map((r) => r.DA_Start);
-    console.log("DA_Start values:", daStarts);
-    console.log("Top 10 wines:", filtered);
     return filtered;
   }, [rows, selectedScore, region, wineClass]);
-
-  // --- Handle case format for per-bottle calculations ---
-  const getBottles = (caseFormat) => {
-    if (!caseFormat) return 12;
-    const num = parseInt(caseFormat.split(" x ")[0], 10);
-    return isNaN(num) ? 12 : num;
-  };
 
   // --- Early return if no valid selection ---
   if (!selectedScore) {
@@ -67,37 +59,28 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
   }
 
   // --- Determine x-axis range ---
-  const minStart = Math.min(...top10.map((r) => (r.DA_Start >= 1900 ? r.DA_Start : 2000))) - 3;
-  const maxFinish = Math.max(...top10.map((r) => (r.DA_Finish >= 1900 ? r.DA_Finish : 2030))) + 3;
+  const minStart = Math.min(...top10.map((r) => r.DA_Start)) - 3;
+  const maxFinish = Math.max(...top10.map((r) => r.DA_Finish)) + 3;
   const xAxisRange = maxFinish - minStart;
-  console.log("Calculated X-axis range:", { minStart, maxFinish, xAxisRange });
 
-  // --- Color bars by drinking window segments relative to 2025 ---
+  // --- Segment coloring ---
   const currentYear = 2025;
   const getSegmentColors = (start, finish) => {
     const segments = [];
-    const totalWidthPercent = 100;
-    const startOffset = ((start - minStart) / xAxisRange) * totalWidthPercent;
-    const windowWidthPercent = ((finish - start) / xAxisRange) * totalWidthPercent;
-
-    if (start < currentYear) {
-      const preCurrentWidth = Math.min((currentYear - start) / xAxisRange * totalWidthPercent, windowWidthPercent);
-      segments.push({ x: startOffset, width: preCurrentWidth, color: "yellow" });
-    }
-    if (start <= currentYear && currentYear <= finish) {
-      const greenStartOffset = ((currentYear - start) / xAxisRange) * totalWidthPercent;
-      const greenWidth = Math.min((finish - currentYear) / xAxisRange * totalWidthPercent, windowWidthPercent - greenStartOffset);
-      segments.push({ x: startOffset + greenStartOffset, width: greenWidth, color: "green" });
-    }
-    if (finish > currentYear) {
-      const postCurrentStart = ((finish - currentYear) / xAxisRange) * totalWidthPercent;
-      const postCurrentWidth = Math.min(windowWidthPercent - postCurrentStart, windowWidthPercent);
-      segments.push({ x: startOffset + postCurrentStart, width: postCurrentWidth, color: "red" });
+    if (currentYear < start) {
+      segments.push({ start, end: finish, color: "yellow" }); // Not drinkable yet
+    } else if (currentYear > finish) {
+      segments.push({ start, end: finish, color: "red" }); // Past window
+    } else {
+      if (start < currentYear) {
+        segments.push({ start, end: currentYear, color: "yellow" });
+      }
+      segments.push({ start: Math.max(start, currentYear), end: finish, color: "green" });
     }
     return segments;
   };
 
-  // --- Debug effect to log final top10 and range ---
+  // --- Debug logs ---
   useEffect(() => {
     console.log("Rendered top10:", top10);
     console.log("Final X-axis range used:", { minStart, maxFinish });
@@ -144,24 +127,24 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
         </thead>
         <tbody>
           {top10.map((r, i) => {
-            const bottles = getBottles(r.Case_Format);
+            const bottles = parseInt(r.Case_Format?.split(" x ")[0], 10) || 12;
             return (
               <tr key={i}>
                 <td style={{ border: "1px solid #ccc", padding: "6px" }}>{r.Region}</td>
                 <td style={{ border: "1px solid #ccc", padding: "6px" }}>{r.Product}</td>
                 <td style={{ border: "1px solid #ccc", padding: "6px" }}>{r.Vintage}</td>
                 <td style={{ border: "1px solid #ccc", padding: "6px" }}>
-                  ${r.Price.toFixed(2)}
+                  ${r.Price?.toFixed(2)}
                 </td>
                 <td style={{ border: "1px solid #ccc", padding: "6px" }}>
-                  ${r.PriceValueDiff.toFixed(2)}
+                  ${r.PriceValueDiff?.toFixed(2)}
                 </td>
                 <td style={{ border: "1px solid #ccc", padding: "6px" }}>{r.Bid_Qty}</td>
                 <td style={{ border: "1px solid #ccc", padding: "6px" }}>
                   ${(r.Bid_Per_Case / bottles).toFixed(2)}
                 </td>
                 <td style={{ border: "1px solid #ccc", padding: "6px" }}>
-                  {r.Spread.toFixed(4)}
+                  {r.Spread?.toFixed(4)}
                 </td>
                 <td style={{ border: "1px solid #ccc", padding: "6px" }}>
                   ${(r.Offer_Per_Case / bottles).toFixed(2)}
@@ -174,22 +157,22 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
       </table>
 
       {/* --- Graph --- */}
-      <div style={{ width: "100%", height: 550 }}> {/* Increased height for legend */}
+      <div style={{ width: "100%", height: 550 }}>
         <ResponsiveContainer>
           <ComposedChart
             layout="vertical"
             data={top10}
-            margin={{ top: 20, right: 30, left: 100, bottom: 20 }}
+            margin={{ top: 20, right: 30, left: 120, bottom: 20 }}
           >
             <XAxis
               type="number"
               domain={[minStart, maxFinish]}
-              tickFormatter={(value) => Math.round(value)} // Ensure integer ticks
+              tickFormatter={(value) => Math.round(value)}
               label={{ value: "Drinking Window (Years)", position: "insideBottom", offset: -5 }}
             />
             <YAxis dataKey="Label" type="category" width={200} tick={{ fontSize: 12 }} />
             <Tooltip
-              formatter={(value, name, props) => [
+              formatter={(_, __, props) => [
                 `${props.payload.DA_Start} - ${props.payload.DA_Finish}`,
                 "Drinking Window",
               ]}
@@ -211,25 +194,29 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
               dataKey="DrinkingWindowWidth"
               barSize={20}
               shape={(props) => {
-                const { x, y, payload, width: baseWidth, height } = props;
-                const startOffset = ((payload.DA_Start - minStart) / xAxisRange) * baseWidth;
-                const totalWidth = baseWidth; // Use full width for the range
+                const { y, height, payload, xAxis } = props;
+                const xScale = xAxis.scale;
                 const segments = getSegmentColors(payload.DA_Start, payload.DA_Finish);
-
-                console.log("Shape debug:", { payload, startOffset, totalWidth, segments }); // Debug shape
 
                 return (
                   <g>
-                    {segments.map((segment, index) => (
-                      <rect
-                        key={index}
-                        x={x + segment.x / 100 * totalWidth}
-                        y={y}
-                        width={segment.width / 100 * totalWidth}
-                        height={height}
-                        fill={segment.color}
-                      />
-                    ))}
+                    {segments.map((seg, i) => {
+                      const segStart = xScale(seg.start);
+                      const segEnd = xScale(seg.end);
+                      const x = Math.min(segStart, segEnd);
+                      const width = Math.abs(segEnd - segStart);
+
+                      return (
+                        <rect
+                          key={i}
+                          x={x}
+                          y={y}
+                          width={width}
+                          height={height}
+                          fill={seg.color}
+                        />
+                      );
+                    })}
                   </g>
                 );
               }}
