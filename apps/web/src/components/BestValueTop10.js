@@ -8,6 +8,7 @@ import {
   Bar,
   LabelList,
   Cell,
+  Legend,
 } from "recharts";
 
 export default function BestValueTop10({ rows, selectedProduct, selectedVintage }) {
@@ -28,13 +29,14 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
         (r) =>
           r.Region === region &&
           r.Wine_Class === wineClass &&
-          r.Score === selectedScore
+          r.Score === selectedScore &&
+          r.DA_Start && r.DA_Finish // Ensure valid drinking window
       )
       .map((r) => ({
         ...r,
         Label: `${r.Product} (${r.Vintage})`,
-        DrinkingWindowStart: r.DA_Start, // For precise start positioning
-        DrinkingWindowWidth: r.DA_Finish - r.DA_Start, // Raw width for scaling
+        DrinkingWindowStart: r.DA_Start,
+        DrinkingWindowWidth: r.DA_Finish - r.DA_Start,
       }))
       .sort((a, b) => a.PriceValueDiff - b.PriceValueDiff)
       .slice(0, 10);
@@ -66,27 +68,28 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
   const minStart = Math.min(...top10.map((r) => r.DA_Start || 2000)) - 3; // Dynamic start
   const maxFinish = Math.max(...top10.map((r) => r.DA_Finish || 2030)) + 3; // Dynamic end
   const xAxisRange = maxFinish - minStart; // Total range for scaling
+  console.log("X-axis range:", { minStart, maxFinish }); // Debug X-axis range
 
   // --- Color bars by drinking window segments ---
   const currentYear = 2025;
   const getSegmentColors = (start, finish) => {
     const segments = [];
+    const totalWidthPercent = 100; // Full width in percentage
+    const startOffset = ((start - minStart) / xAxisRange) * totalWidthPercent;
+    const windowWidthPercent = ((finish - start) / xAxisRange) * totalWidthPercent;
+
     if (start < currentYear) {
-      segments.push({ x: 0, width: Math.max(currentYear - start, 0) / xAxisRange * 100, color: "yellow" });
+      const preCurrentWidth = Math.max((currentYear - start) / xAxisRange * totalWidthPercent, 0);
+      segments.push({ x: startOffset, width: preCurrentWidth, color: "yellow" });
     }
     if (start <= currentYear && currentYear <= finish) {
-      segments.push({
-        x: (currentYear - start) / xAxisRange * 100,
-        width: Math.max(finish - currentYear, 0) / xAxisRange * 100,
-        color: "green",
-      });
+      const greenStart = Math.max((currentYear - start) / xAxisRange * totalWidthPercent, 0);
+      const greenWidth = Math.max((finish - currentYear) / xAxisRange * totalWidthPercent, 0);
+      segments.push({ x: startOffset + greenStart, width: greenWidth, color: "green" });
     }
     if (finish > currentYear) {
-      segments.push({
-        x: (finish - currentYear) / xAxisRange * 100,
-        width: Math.max(finish - currentYear, 0) / xAxisRange * 100,
-        color: "red",
-      });
+      const postCurrentStart = Math.max((finish - currentYear) / xAxisRange * totalWidthPercent, 0);
+      segments.push({ x: startOffset + postCurrentStart, width: windowWidthPercent - postCurrentStart, color: "red" });
     }
     return segments;
   };
@@ -162,7 +165,7 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
       </table>
 
       {/* --- Graph --- */}
-      <div style={{ width: "100%", height: 500 }}>
+      <div style={{ width: "100%", height: 550 }}> {/* Increased height for legend */}
         <ResponsiveContainer>
           <ComposedChart
             layout="vertical"
@@ -181,13 +184,25 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
                 "Drinking Window",
               ]}
             />
+            <Legend
+              verticalAlign="top"
+              height={36}
+              wrapperStyle={{ paddingBottom: "10px" }}
+              formatter={(value) => {
+                const colorMap = {
+                  yellow: "Not drinkable",
+                  green: "Drinkable",
+                  red: "Past",
+                };
+                return colorMap[value] || value;
+              }}
+            />
             <Bar
               dataKey="DrinkingWindowWidth"
               barSize={20}
               shape={(props) => {
                 const { x, y, payload, width: baseWidth, height } = props;
-                const startOffset = (payload.DA_Start - minStart) / xAxisRange; // Proportion from minStart
-                const fullWidth = baseWidth; // Use full available width
+                const startOffset = ((payload.DA_Start - minStart) / xAxisRange) * baseWidth;
                 const segments = getSegmentColors(payload.DA_Start, payload.DA_Finish);
 
                 return (
@@ -195,9 +210,9 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
                     {segments.map((segment, index) => (
                       <rect
                         key={index}
-                        x={x + startOffset * baseWidth}
+                        x={x + segment.x}
                         y={y}
-                        width={segment.width * (baseWidth / 100)} // Scale to percentage of baseWidth
+                        width={segment.width}
                         height={height}
                         fill={segment.color}
                       />
