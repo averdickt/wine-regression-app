@@ -71,48 +71,43 @@ export default function Home() {
   }
 
   return (
-    <div style={{ padding: "20px", display: "flex" }}>
-      {/* LEFT SIDE: controls + charts */}
-      <div style={{ flex: 1, paddingRight: "20px" }}>
-        <h1>Wine Charts</h1>
-        <p>
-          Default dataset loaded from <code>processed_wine_data.xlsx</code>.  
-          Upload another file to override:
-        </p>
-        <input type="file" accept=".xlsx,.csv" onChange={handleFileUpload} />
+  <div style={{ padding: "20px", maxWidth: "1200px", margin: "0 auto" }}>
+    <h1>Wine Charts</h1>
+    <p>
+      Default dataset loaded from <code>processed_wine_data.xlsx</code>.  
+      Upload another file to override:
+    </p>
+    <input type="file" accept=".xlsx,.csv" onChange={handleFileUpload} />
 
-        <div style={{ marginTop: "20px" }}>
-          <AutocompleteBox options={productOptions} value={product} onChange={setProduct} />
-          <Dropdown options={vintageOptions} value={vintage} onChange={setVintage} />
-        </div>
-
-        {/* Debug info */}
-        <p style={{ color: "red" }}>
-          DEBUG: Selected {product} / {vintage} (region: {region})
-        </p>
-
-        <div style={{ marginTop: "40px" }}>
-          <h2>Product Regression Chart</h2>
-          <ProductRegressionChart data={filteredData} highlightVintage={vintage} />
-        </div>
-
-        <div style={{ marginTop: "40px" }}>
-          <h2>Price/Score by Vintage</h2>
-          <PriceScoreVintageChart
-            data={filteredData}
-            highlightVintage={vintage}
-            DA_Start={2005}
-            DA_Finish={2015}
-          />
-        </div>
-
-        <div style={{ marginTop: "40px" }}>
-          <BestValueTop10 rows={rows} selectedProduct={product} selectedVintage={vintage} />
-        </div>
-      </div>
-
-      {/* RIGHT SIDE: detail sidebar */}
-      <WineDetailPanel product={product} vintage={vintage} region={region} />
+    <div style={{ marginTop: "20px" }}>
+      <AutocompleteBox options={productOptions} value={product} onChange={setProduct} />
+      <Dropdown options={vintageOptions} value={vintage} onChange={setVintage} />
     </div>
-  );
+
+    <p style={{ color: "red" }}>
+      DEBUG: Selected {product} / {vintage} (region: {region})
+    </p>
+
+    <div style={{ marginTop: "40px" }}>
+      <h2>Product Regression Chart</h2>
+      <ProductRegressionChart data={filteredData} highlightVintage={vintage} />
+    </div>
+
+    <div style={{ marginTop: "40px" }}>
+      <h2>Price/Score by Vintage</h2>
+      <PriceScoreVintageChart
+        data={filteredData}
+        highlightVintage={vintage}
+        DA_Start={2005}
+        DA_Finish={2015}
+      />
+    </div>
+
+    <div style={{ marginTop: "40px" }}>
+      <BestValueTop10 rows={rows} selectedProduct={product} selectedVintage={vintage} />
+    </div>
+
+    <WineDetailPanel product={product} vintage={vintage} region={region} />
+  </div>
+);
 }
