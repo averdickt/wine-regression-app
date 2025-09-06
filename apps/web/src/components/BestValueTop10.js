@@ -1,152 +1,147 @@
+// src/components/BestValueTop10.js
 import React, { useMemo } from "react";
 import {
+  ResponsiveContainer,
   ComposedChart,
-  Bar,
   XAxis,
   YAxis,
   Tooltip,
-  ResponsiveContainer,
-  Scatter
+  Bar,
+  LabelList,
 } from "recharts";
 
 export default function BestValueTop10({ rows, selectedProduct, selectedVintage }) {
-  const currentYear = new Date().getFullYear();
+  // --- find the score of selected wine ---
+  const selectedRow = rows.find(
+    (r) => r.Product === selectedProduct && r.Vintage === selectedVintage
+  );
+  const selectedScore = selectedRow?.Score;
 
-  const { candidates, region, wineClass, xMin, xMax } = useMemo(() => {
-    if (!rows || rows.length === 0 || !selectedProduct || !selectedVintage) {
-      return { candidates: [], region: "", wineClass: "", xMin: 0, xMax: 0 };
-    }
+  // --- filter same region & wine_class ---
+  const region = selectedRow?.Region;
+  const wineClass = selectedRow?.Wine_Class;
 
-    const selRow = rows.find(
-      r =>
-        r.Product === selectedProduct &&
-        String(r.Vintage) === String(selectedVintage)
-    );
-    if (!selRow) return { candidates: [], region: "", wineClass: "", xMin: 0, xMax: 0 };
+  const top10 = useMemo(() => {
+    if (!selectedScore || !region || !wineClass) return [];
 
-    const { Region, Wine_Class } = selRow;
-
-    const wines = rows
-      .filter(r => r.Region === Region && r.Wine_Class === Wine_Class)
-      .map(r => ({
+    return rows
+      .filter((r) => r.Region === region && r.Wine_Class === wineClass)
+      .map((r) => ({
         ...r,
-        Vintage: parseInt(r.Vintage),
-        DA_Start: parseInt(r.DA_Start),
-        DA_Finish: parseInt(r.DA_Finish),
-        Label: `${r.Product} ${r.Vintage}`
+        Label: `${r.Product} (${r.Vintage})`,
       }))
       .sort((a, b) => a.PriceValueDiff - b.PriceValueDiff)
       .slice(0, 10);
+  }, [rows, selectedScore, region, wineClass]);
 
-    const starts = wines.map(w => w.DA_Start || 9999);
-    const finishes = wines.map(w => w.DA_Finish || 0);
-    const minStart = Math.min(...starts);
-    const maxFinish = Math.max(...finishes);
-
-    return {
-      candidates: wines,
-      region: Region,
-      wineClass: Wine_Class,
-      xMin: minStart - 3,
-      xMax: maxFinish + 3
-    };
-  }, [rows, selectedProduct, selectedVintage]);
-
-  if (candidates.length === 0) {
-    return <p>No comparable wines found.</p>;
+  if (!selectedScore) {
+    return <p>Please select a Product and Vintage with a score.</p>;
   }
 
-  return (
-    <div>
-      <h2>Top 10 Best Value Wines ({region}, {wineClass})</h2>
-      <div style={{ display: "flex", flexDirection: "column", gap: "30px" }}>
-        {/* Table */}
-        <div style={{ overflowX: "auto" }}>
-          <table border="1" cellPadding="5" style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr>
-                <th>Region</th>
-                <th>Product</th>
-                <th>Vintage</th>
-                <th>Price</th>
-                <th>PriceValueDiff</th>
-                <th>Bid_Qty</th>
-                <th>Bid_Per_Case</th>
-                <th>Spread</th>
-                <th>Offer_Per_Case</th>
-                <th>Offer_Qty</th>
-              </tr>
-            </thead>
-            <tbody>
-              {candidates.map((wine, idx) => (
-                <tr key={idx}>
-                  <td>{wine.Region}</td>
-                  <td>{wine.Product}</td>
-                  <td>{wine.Vintage}</td>
-                  <td>{wine.Price}</td>
-                  <td>{wine.PriceValueDiff}</td>
-                  <td>{wine.Bid_Qty}</td>
-                  <td>{wine.Bid_Per_Case}</td>
-                  <td>{wine.Spread}</td>
-                  <td>{wine.Offer_Per_Case}</td>
-                  <td>{wine.Offer_Qty}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+  // --- determine x-axis range ---
+  const minStart = Math.min(...top10.map((r) => r.DA_Start || r.Vintage)) - 3;
+  const maxFinish = Math.max(...top10.map((r) => r.DA_Finish || r.Vintage)) + 3;
 
-        {/* Chart */}
-        <ResponsiveContainer width="100%" height={400}>
+  // --- colour bars by drinking window ---
+  const getBarColor = (r) => {
+    if (r.Vintage < r.DA_Start) return "red";
+    if (r.Vintage > r.DA_Finish) return "yellow";
+    return "green";
+  };
+
+  return (
+    <div style={{ marginTop: "20px" }}>
+      <h2>Top 10 Best Value Wines (Same Region & Class)</h2>
+
+      {/* --- Table --- */}
+      <table
+        style={{
+          width: "100%",
+          borderCollapse: "collapse",
+          marginBottom: "20px",
+        }}
+      >
+        <thead>
+          <tr>
+            {[
+              "Region",
+              "Product",
+              "Vintage",
+              "Price",
+              "PriceValueDiff",
+              "Bid_Qty",
+              "Bid_Per_Case",
+              "Spread",
+              "Offer_Per_Case",
+              "Offer_Qty",
+            ].map((h) => (
+              <th
+                key={h}
+                style={{
+                  border: "1px solid #ccc",
+                  padding: "6px",
+                  background: "#f9f9f9",
+                }}
+              >
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {top10.map((r, i) => (
+            <tr key={i}>
+              <td style={{ border: "1px solid #ccc", padding: "6px" }}>{r.Region}</td>
+              <td style={{ border: "1px solid #ccc", padding: "6px" }}>{r.Product}</td>
+              <td style={{ border: "1px solid #ccc", padding: "6px" }}>{r.Vintage}</td>
+              <td style={{ border: "1px solid #ccc", padding: "6px" }}>{r.Price}</td>
+              <td style={{ border: "1px solid #ccc", padding: "6px" }}>
+                {r.PriceValueDiff}
+              </td>
+              <td style={{ border: "1px solid #ccc", padding: "6px" }}>{r.Bid_Qty}</td>
+              <td style={{ border: "1px solid #ccc", padding: "6px" }}>{r.Bid_Per_Case}</td>
+              <td style={{ border: "1px solid #ccc", padding: "6px" }}>{r.Spread}</td>
+              <td style={{ border: "1px solid #ccc", padding: "6px" }}>
+                {r.Offer_Per_Case}
+              </td>
+              <td style={{ border: "1px solid #ccc", padding: "6px" }}>{r.Offer_Qty}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {/* --- Graph --- */}
+      <div style={{ width: "100%", height: 500 }}>
+        <ResponsiveContainer>
           <ComposedChart
-            data={candidates}
             layout="vertical"
-            margin={{ top: 20, right: 30, left: 150, bottom: 20 }}
+            data={top10}
+            margin={{ top: 20, right: 30, left: 100, bottom: 20 }}
           >
             <XAxis
               type="number"
-              domain={[xMin, xMax]}
-              label={{ value: "Year", position: "insideBottom", offset: -5 }}
+              domain={[minStart, maxFinish]}
+              label={{ value: "Vintage / Years", position: "insideBottom", offset: -5 }}
             />
-            <YAxis type="category" dataKey="Label" width={250} />
+            <YAxis
+              dataKey="Label"
+              type="category"
+              width={200}
+              tick={{ fontSize: 12 }}
+            />
             <Tooltip />
 
-            {/* Bar: dynamic colored drinking window */}
-            <Bar
-              dataKey="DA_Finish"
-              barSize={15}
-              isAnimationActive={false}
-              shape={(props) => {
-                const { y, height, payload, xAxis } = props;
-                const start = payload.DA_Start;
-                const finish = payload.DA_Finish;
-                const xScale = xAxis.scale;
-
-                if (!start || !finish) return null;
-
-                const x1 = xScale(start);
-                const x2 = xScale(finish);
-
-                // dynamic color
-                let color = "green";
-                if (currentYear < start) color = "red";
-                else if (currentYear > finish) color = "yellow";
-
-                return (
-                  <rect
-                    x={x1}
-                    y={y}
-                    width={x2 - x1}
-                    height={height}
-                    fill={color}
-                    opacity={0.6}
-                  />
-                );
-              }}
-            />
-
-            {/* Dot: vintage */}
-            <Scatter dataKey="Vintage" fill="black" shape="circle" />
+            {top10.map((r, i) => (
+              <Bar
+                key={i}
+                dataKey="Vintage"
+                data={[r]}
+                barSize={20}
+                fill={getBarColor(r)}
+              >
+                <LabelList dataKey="Vintage" position="insideRight" />
+              </Bar>
+            ))}
           </ComposedChart>
         </ResponsiveContainer>
       </div>
