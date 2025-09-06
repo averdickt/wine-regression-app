@@ -33,7 +33,7 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
       .map((r) => ({
         ...r,
         Label: `${r.Product} (${r.Vintage})`,
-        DrinkingWindowWidth: Math.max(r.DA_Finish - r.DA_Start, 1), // Ensure positive width
+        DrinkingWindowWidth: r.DA_Finish - r.DA_Start, // Raw width for scaling
       }))
       .sort((a, b) => a.PriceValueDiff - b.PriceValueDiff)
       .slice(0, 10);
@@ -62,8 +62,9 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
   }
 
   // --- Determine x-axis range ---
-  const minStart = Math.min(...top10.map((r) => r.DA_Start || 2000)) - 3; // Fallback to 2000
-  const maxFinish = Math.max(...top10.map((r) => r.DA_Finish || 2030)) + 3; // Fallback to 2030
+  const minStart = Math.min(...top10.map((r) => r.DA_Start || 2000)) - 3; // Start at lowest DA_Start - 3
+  const maxFinish = Math.max(...top10.map((r) => r.DA_Finish || 2030)) + 3; // End at highest DA_Finish + 3
+  const xAxisRange = maxFinish - minStart; // Total range for scaling
 
   // --- Color bars by drinking window ---
   const currentYear = 2025;
@@ -168,11 +169,11 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage 
               barSize={20}
               shape={(props) => {
                 const { x, y, payload, width: baseWidth, height } = props;
-                const startX = (payload.DA_Start - minStart) * (baseWidth / (maxFinish - minStart));
-                const barWidth = Math.max(payload.DA_Finish - payload.DA_Start, 1) * (baseWidth / (maxFinish - minStart));
+                const startOffset = (payload.DA_Start - minStart) / xAxisRange; // Proportion of range
+                const barWidth = (payload.DA_Finish - payload.DA_Start) / xAxisRange * baseWidth; // Scaled width
                 return (
                   <rect
-                    x={x + startX}
+                    x={x + startOffset * baseWidth}
                     y={y}
                     width={barWidth}
                     height={height}
