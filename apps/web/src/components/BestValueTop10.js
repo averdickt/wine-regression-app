@@ -37,7 +37,7 @@ const filtered = rows
   )
   .map((r) => ({
     ...r,
-    Label: `${r.Product} (${r.Vintage})`,
+    Label: '${r.Product} (${r.Vintage})',
     DrinkingWindowStart: r.DA_Start,
     DrinkingWindowWidth: r.DA_Finish - r.DA_Start,
   }))
@@ -233,7 +233,7 @@ return (
           }}
         >
           <LabelList
-            dataKey={(d) => `${d.DA_Start}-${d.DA_Finish}`}
+            dataKey={(d) => '${d.DA_Start}-${d.DA_Finish}'}
             position="insideRight"
             fill="#000"
           />
