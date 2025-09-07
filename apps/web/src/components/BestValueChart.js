@@ -8,22 +8,22 @@ import {
   Bar,
   LabelList,
   Legend,
-  ReferenceLine,
 } from "recharts";
 
-export default function BestValueChart({ top10 }) {
-  const minStart = Math.min(...top10.map((r) => r.DA_Start)) - 1;
-  const maxFinish = Math.max(...top10.map((r) => r.DA_Finish)) + 1;
-
+export default function BestValueTop10Graph({ data, minStart, maxFinish }) {
   const currentYear = new Date().getFullYear();
 
+  // Segment coloring
   const getSegmentColors = (start, finish) => {
     const segments = [];
     if (currentYear < start) {
+      // not yet drinkable
       segments.push({ start, end: finish, color: "yellow" });
     } else if (currentYear > finish) {
+      // past window
       segments.push({ start, end: finish, color: "red" });
     } else {
+      // mixed
       if (start < currentYear) {
         segments.push({ start, end: currentYear, color: "yellow" });
       }
@@ -41,23 +41,33 @@ export default function BestValueChart({ top10 }) {
       <ResponsiveContainer>
         <ComposedChart
           layout="vertical"
-          data={top10}
-          margin={{ top: 20, right: 30, left: 120, bottom: 50 }}
+          data={data}
+          margin={{ top: 20, right: 30, left: 120, bottom: 20 }}
         >
           <XAxis
             type="number"
             domain={[minStart, maxFinish]}
-            tickFormatter={(value) => value}
+            tickFormatter={(v) => v}
+            interval={0}
+            ticks={Array.from(
+              { length: maxFinish - minStart + 1 },
+              (_, i) => minStart + i
+            )}
             angle={-45}
             textAnchor="end"
-            interval={0}
+            height={70}
             label={{
               value: "Drinking Window (Years)",
               position: "insideBottom",
               offset: -5,
             }}
           />
-          <YAxis dataKey="Label" type="category" width={200} tick={{ fontSize: 12 }} />
+          <YAxis
+            dataKey="Label"
+            type="category"
+            width={220}
+            tick={{ fontSize: 12 }}
+          />
           <Tooltip
             formatter={(_, __, props) => [
               `${props.payload.DA_Start} - ${props.payload.DA_Finish}`,
@@ -67,36 +77,27 @@ export default function BestValueChart({ top10 }) {
           <Legend
             verticalAlign="top"
             height={36}
-            wrapperStyle={{ paddingBottom: "10px" }}
             formatter={(value) => {
               const colorMap = {
-                yellow: "Not drinkable",
+                yellow: "Not drinkable yet",
                 green: "Drinkable",
-                red: "Past",
+                red: "Past window",
               };
               return colorMap[value] || value;
-            }}
-          />
-          <ReferenceLine
-            x={currentYear}
-            stroke="blue"
-            strokeDasharray="3 3"
-            label={{
-              value: currentYear.toString(),
-              position: "top",
-              fill: "blue",
-              fontSize: 12,
             }}
           />
           <Bar
             dataKey="DrinkingWindowWidth"
             barSize={20}
             shape={(props) => {
-              const { y, height, payload, xAxis } = props;
+              const { y, height, payload, x, xAxis } = props;
               if (!payload || !xAxis?.scale) return null;
 
               const scale = xAxis.scale;
-              const segments = getSegmentColors(payload.DA_Start, payload.DA_Finish);
+              const segments = getSegmentColors(
+                payload.DA_Start,
+                payload.DA_Finish
+              );
 
               return (
                 <g>
