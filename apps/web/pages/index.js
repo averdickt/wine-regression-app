@@ -5,7 +5,7 @@ import Dropdown from "../src/components/Dropdown";
 import ProductRegressionChart from "../src/components/ProductRegressionChart";
 import PriceScoreVintageChart from "../src/components/PriceScoreVintageChart";
 import WineDetailPanel from "../src/components/WineDetailPanel";
-import BestValueTop10Graph from "../src/components/BestValueTop10Graph";
+import BestValueTop10 from "../src/components/BestValueTop10";
 
 export default function Home() {
   const [rows, setRows] = useState([]);
@@ -15,7 +15,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // --- Load default dataset ---
+  // --- Load default data ---
   useEffect(() => {
     async function fetchDefaultData() {
       try {
@@ -58,7 +58,7 @@ export default function Home() {
     fetchDefaultData();
   }, []);
 
-  // --- File upload handler ---
+  // --- Handle manual file upload ---
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -98,13 +98,12 @@ export default function Home() {
     reader.readAsBinaryString(file);
   };
 
-  // --- Dropdown options ---
+  // --- Options ---
   const productOptions = [...new Set(rows.map((r) => r.Product))].sort();
   const vintageOptions = [
     ...new Set(rows.filter((r) => r.Product === product).map((r) => r.Vintage)),
   ].sort((a, b) => a - b);
 
-  // --- Update region automatically ---
   useEffect(() => {
     const filteredData = rows.filter((r) => r.Product === product);
     if (filteredData.length > 0) {
@@ -112,10 +111,7 @@ export default function Home() {
     }
   }, [product, rows]);
 
-  // --- Loading / error states ---
-  if (loading) {
-    return <p>Loading wine data...</p>;
-  }
+  if (loading) return <p>Loading wine data...</p>;
   if (error) {
     return (
       <div style={{ padding: "20px" }}>
@@ -133,36 +129,6 @@ export default function Home() {
     );
   }
 
-  // --- Compute Top 10 Best Value Wines for Graph ---
-  const selectedRow = rows.find(
-    (r) => r.Product === product && r.Vintage === vintage
-  );
-  const selectedScore = selectedRow?.Score;
-  const selectedRegion = selectedRow?.Region;
-  const selectedClass = selectedRow?.Wine_Class;
-
-  const top10 = rows
-    .filter(
-      (r) =>
-        r.Region === selectedRegion &&
-        r.Wine_Class === selectedClass &&
-        r.Score === selectedScore &&
-        r.DA_Start &&
-        r.DA_Finish
-    )
-    .map((r) => ({
-      ...r,
-      Label: `${r.Product} (${r.Vintage})`,
-      DrinkingWindowWidth: r.DA_Finish - r.DA_Start,
-    }))
-    .sort((a, b) => a.PriceValueDiff - b.PriceValueDiff)
-    .slice(0, 10);
-
-  const minStart =
-    top10.length > 0 ? Math.min(...top10.map((r) => r.DA_Start)) - 3 : 2000;
-  const maxFinish =
-    top10.length > 0 ? Math.max(...top10.map((r) => r.DA_Finish)) + 3 : 2030;
-
   return (
     <div
       style={{
@@ -178,7 +144,8 @@ export default function Home() {
       <div style={{ flex: 3, padding: "20px", minWidth: 0 }}>
         <h1>Wine Charts</h1>
         <p>
-          Default dataset loaded from <code>processed_wine_data.xlsx</code>. Upload another file to override:
+          Default dataset loaded from <code>processed_wine_data.xlsx</code>.  
+          Upload another file to override:
         </p>
         <input type="file" accept=".xlsx,.csv" onChange={handleFileUpload} />
 
@@ -195,7 +162,6 @@ export default function Home() {
           />
         </div>
 
-        {/* Charts */}
         <div style={{ marginTop: "40px" }}>
           <h2>Product Regression Chart</h2>
           <ProductRegressionChart
@@ -215,11 +181,10 @@ export default function Home() {
         </div>
 
         <div style={{ marginTop: "40px" }}>
-          <h2>Top 10 Best Value Wines</h2>
-          <BestValueTop10Graph
-            data={top10}
-            minStart={minStart}
-            maxFinish={maxFinish}
+          <BestValueTop10
+            rows={rows}
+            selectedProduct={product}
+            selectedVintage={vintage}
           />
         </div>
       </div>
