@@ -5,17 +5,17 @@ import Dropdown from "../src/components/Dropdown";
 import ProductRegressionChart from "../src/components/ProductRegressionChart";
 import PriceScoreVintageChart from "../src/components/PriceScoreVintageChart";
 import WineDetailPanel from "../src/components/WineDetailPanel";
-import BestValueTop10 from "../src/components/BestValueTop10";
+import BestValueTop10Graph from "../src/components/BestValueTop10Graph";
 
 export default function Home() {
   const [rows, setRows] = useState([]);
   const [product, setProduct] = useState("Chateau Margaux Premier Cru Classe");
-  const [vintage, setVintage] = useState(null); // start empty, auto-set later
+  const [vintage, setVintage] = useState(2010);
   const [region, setRegion] = useState("Bordeaux");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // --- Load default data ---
+  // --- Load default dataset ---
   useEffect(() => {
     async function fetchDefaultData() {
       try {
@@ -29,7 +29,6 @@ export default function Home() {
         const worksheet = workbook.Sheets[workbook.SheetNames[0]];
         const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
-        // Normalize data
         const normalizedData = jsonData.map((row) => ({
           Region: row.Region || "",
           Product: row.Product || "",
@@ -59,7 +58,7 @@ export default function Home() {
     fetchDefaultData();
   }, []);
 
-  // --- Handle manual file upload ---
+  // --- File upload handler ---
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -71,7 +70,6 @@ export default function Home() {
         const ws = wb.Sheets[wb.SheetNames[0]];
         const data = XLSX.utils.sheet_to_json(ws);
 
-        // Normalize uploaded data
         const normalizedData = data.map((row) => ({
           Region: row.Region || "",
           Product: row.Product || "",
@@ -100,22 +98,13 @@ export default function Home() {
     reader.readAsBinaryString(file);
   };
 
-  // --- Compute product and vintage options ---
+  // --- Dropdown options ---
   const productOptions = [...new Set(rows.map((r) => r.Product))].sort();
   const vintageOptions = [
     ...new Set(rows.filter((r) => r.Product === product).map((r) => r.Vintage)),
   ].sort((a, b) => a - b);
 
-  // --- Auto-select latest vintage when product changes ---
-  useEffect(() => {
-    if (vintageOptions.length > 0) {
-      setVintage(vintageOptions[vintageOptions.length - 1]);
-    } else {
-      setVintage(null);
-    }
-  }, [product, rows]); // recalc when product or dataset changes
-
-  // --- Update region when product changes ---
+  // --- Update region automatically ---
   useEffect(() => {
     const filteredData = rows.filter((r) => r.Product === product);
     if (filteredData.length > 0) {
@@ -123,7 +112,7 @@ export default function Home() {
     }
   }, [product, rows]);
 
-  // --- Render loading or error states ---
+  // --- Loading / error states ---
   if (loading) {
     return <p>Loading wine data...</p>;
   }
@@ -144,6 +133,36 @@ export default function Home() {
     );
   }
 
+  // --- Compute Top 10 Best Value Wines for Graph ---
+  const selectedRow = rows.find(
+    (r) => r.Product === product && r.Vintage === vintage
+  );
+  const selectedScore = selectedRow?.Score;
+  const selectedRegion = selectedRow?.Region;
+  const selectedClass = selectedRow?.Wine_Class;
+
+  const top10 = rows
+    .filter(
+      (r) =>
+        r.Region === selectedRegion &&
+        r.Wine_Class === selectedClass &&
+        r.Score === selectedScore &&
+        r.DA_Start &&
+        r.DA_Finish
+    )
+    .map((r) => ({
+      ...r,
+      Label: `${r.Product} (${r.Vintage})`,
+      DrinkingWindowWidth: r.DA_Finish - r.DA_Start,
+    }))
+    .sort((a, b) => a.PriceValueDiff - b.PriceValueDiff)
+    .slice(0, 10);
+
+  const minStart =
+    top10.length > 0 ? Math.min(...top10.map((r) => r.DA_Start)) - 3 : 2000;
+  const maxFinish =
+    top10.length > 0 ? Math.max(...top10.map((r) => r.DA_Finish)) + 3 : 2030;
+
   return (
     <div
       style={{
@@ -155,12 +174,11 @@ export default function Home() {
         overflowX: "hidden",
       }}
     >
-      {/* LEFT SIDE: controls + charts + table */}
+      {/* LEFT SIDE */}
       <div style={{ flex: 3, padding: "20px", minWidth: 0 }}>
         <h1>Wine Charts</h1>
         <p>
-          Default dataset loaded from <code>processed_wine_data.xlsx</code>.  
-          Upload another file to override:
+          Default dataset loaded from <code>processed_wine_data.xlsx</code>. Upload another file to override:
         </p>
         <input type="file" accept=".xlsx,.csv" onChange={handleFileUpload} />
 
@@ -172,11 +190,12 @@ export default function Home() {
           />
           <Dropdown
             options={vintageOptions}
-            value={vintage || ""}
+            value={vintage}
             onChange={(value) => setVintage(Number(value))}
           />
         </div>
 
+        {/* Charts */}
         <div style={{ marginTop: "40px" }}>
           <h2>Product Regression Chart</h2>
           <ProductRegressionChart
@@ -196,15 +215,16 @@ export default function Home() {
         </div>
 
         <div style={{ marginTop: "40px" }}>
-          <BestValueTop10
-            rows={rows}
-            selectedProduct={product}
-            selectedVintage={vintage}
+          <h2>Top 10 Best Value Wines</h2>
+          <BestValueTop10Graph
+            data={top10}
+            minStart={minStart}
+            maxFinish={maxFinish}
           />
         </div>
       </div>
 
-      {/* RIGHT SIDE: detail sidebar */}
+      {/* RIGHT SIDE */}
       <div
         style={{
           flex: 1,
