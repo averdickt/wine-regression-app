@@ -10,7 +10,7 @@ import BestValueTop10 from "../src/components/BestValueTop10";
 export default function Home() {
   const [rows, setRows] = useState([]);
   const [product, setProduct] = useState("Chateau Margaux Premier Cru Classe");
-  const [vintage, setVintage] = useState(2010); // Initialize as number
+  const [vintage, setVintage] = useState(null); // start empty, auto-set later
   const [region, setRegion] = useState("Bordeaux");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -106,6 +106,15 @@ export default function Home() {
     ...new Set(rows.filter((r) => r.Product === product).map((r) => r.Vintage)),
   ].sort((a, b) => a - b);
 
+  // --- Auto-select latest vintage when product changes ---
+  useEffect(() => {
+    if (vintageOptions.length > 0) {
+      setVintage(vintageOptions[vintageOptions.length - 1]);
+    } else {
+      setVintage(null);
+    }
+  }, [product, rows]); // recalc when product or dataset changes
+
   // --- Update region when product changes ---
   useEffect(() => {
     const filteredData = rows.filter((r) => r.Product === product);
@@ -163,14 +172,17 @@ export default function Home() {
           />
           <Dropdown
             options={vintageOptions}
-            value={vintage}
-            onChange={(value) => setVintage(Number(value))} // Convert to number
+            value={vintage || ""}
+            onChange={(value) => setVintage(Number(value))}
           />
         </div>
 
         <div style={{ marginTop: "40px" }}>
           <h2>Product Regression Chart</h2>
-          <ProductRegressionChart data={rows.filter((r) => r.Product === product)} highlightVintage={vintage} />
+          <ProductRegressionChart
+            data={rows.filter((r) => r.Product === product)}
+            highlightVintage={vintage}
+          />
         </div>
 
         <div style={{ marginTop: "40px" }}>
@@ -178,8 +190,8 @@ export default function Home() {
           <PriceScoreVintageChart
             data={rows.filter((r) => r.Product === product)}
             highlightVintage={vintage}
-            DA_Start={2005} // Update if dynamic
-            DA_Finish={2015} // Update if dynamic
+            DA_Start={2005}
+            DA_Finish={2015}
           />
         </div>
 
