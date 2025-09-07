@@ -1,42 +1,130 @@
-import React, { useMemo } from "react";
-import BestValueTop10Graph from "./BestValueTop10Graph";
+import React from "react";
+import {
+  ResponsiveContainer,
+  ComposedChart,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Bar,
+  Legend,
+  LabelList,
+} from "recharts";
 
-export default function BestValueTop10({ rows, selectedProduct, selectedVintage }) {
-  // --- filter + sort top 10 wines by PriceValueDiff ---
-  const top10 = useMemo(() => {
-    if (!rows || rows.length === 0) return [];
-    return [...rows]
-      .filter((r) => r.Score > 0 && r.DA_Start > 0 && r.DA_Finish > 0)
-      .sort((a, b) => a.PriceValueDiff - b.PriceValueDiff)
-      .slice(0, 10)
-      .map((r) => ({
-        ...r,
-        Label: `${r.Product} (${r.Vintage})`,
-        DrinkingWindowWidth: r.DA_Finish - r.DA_Start,
-      }));
-  }, [rows]);
-
-  // --- determine axis boundaries ---
-  const minStart = useMemo(() => {
-    return top10.length > 0 ? Math.min(...top10.map((r) => r.DA_Start)) : 2000;
-  }, [top10]);
-
-  const maxFinish = useMemo(() => {
-    return top10.length > 0 ? Math.max(...top10.map((r) => r.DA_Finish)) : 2035;
-  }, [top10]);
-
-  if (!top10 || top10.length === 0) {
-    return <p>No data available for Best Value Top 10</p>;
+export default function BestValueTop10Graph({ data }) {
+  if (!data || data.length === 0) {
+    return <p>No drinking window data to display.</p>;
   }
 
+  // Calculate x-axis range
+  const minStart = Math.min(...data.map((r) => r.DA_Start)) - 1;
+  const maxFinish = Math.max(...data.map((r) => r.DA_Finish)) + 1;
+
+  const currentYear = new Date().getFullYear();
+
+  // Segment coloring function
+  const getSegmentColors = (start, finish) => {
+    const segments = [];
+    if (currentYear < start) {
+      segments.push({ start, end: finish, color: "yellow" });
+    } else if (currentYear > finish) {
+      segments.push({ start, end: finish, color: "red" });
+    } else {
+      if (start < currentYear) {
+        segments.push({ start, end: currentYear, color: "yellow" });
+      }
+      segments.push({ start: Math.max(start, currentYear), end: finish, color: "green" });
+    }
+    return segments;
+  };
+
   return (
-    <div style={{ marginTop: "20px" }}>
-      <h2>Best Value Top 10 (Drinking Windows)</h2>
-      <BestValueTop10Graph
-        data={top10}
-        minStart={minStart}
-        maxFinish={maxFinish}
-      />
+    <div style={{ width: "100%", height: 500 }}>
+      <ResponsiveContainer>
+        <ComposedChart
+          layout="vertical"
+          data={data}
+          margin={{ top: 20, right: 30, left: 120, bottom: 20 }}
+        >
+          <XAxis
+            type="number"
+            domain={[minStart, maxFinish]}
+            tickCount={maxFinish - minStart + 1}
+            tickFormatter={(v) => v}
+            angle={-45}
+            textAnchor="end"
+            height={70}
+            label={{
+              value: "Drinking Window (Years)",
+              position: "insideBottom",
+              offset: -5,
+            }}
+          />
+          <YAxis
+            dataKey="Label"
+            type="category"
+            width={200}
+            tick={{ fontSize: 12 }}
+          />
+          <Tooltip
+            formatter={(_, __, props) => [
+              `${props.payload.DA_Start} - ${props.payload.DA_Finish}`,
+              "Drinking Window",
+            ]}
+          />
+          <Legend
+            verticalAlign="top"
+            height={36}
+            formatter={(value) => {
+              const map = {
+                yellow: "Not yet drinkable",
+                green: "Drinkable now",
+                red: "Past prime",
+              };
+              return map[value] || value;
+            }}
+          />
+
+          <Bar
+            dataKey="DrinkingWindowWidth"
+            barSize={20}
+            shape={(props) => {
+              const { y, height, payload, xAxis } = props;
+              if (!payload || !xAxis?.scale) return null;
+
+              const scale = xAxis.scale;
+              const segments = getSegmentColors(payload.DA_Start, payload.DA_Finish);
+
+              return (
+                <g>
+                  {segments.map((seg, i) => {
+                    const segStart = scale(seg.start);
+                    const segEnd = scale(seg.end);
+                    const rectX = Math.min(segStart, segEnd);
+                    const rectWidth = Math.abs(segEnd - segStart);
+
+                    return (
+                      <rect
+                        key={i}
+                        x={rectX}
+                        y={y}
+                        width={rectWidth}
+                        height={height}
+                        fill={seg.color}
+                      />
+                    );
+                  })}
+                </g>
+              );
+            }}
+          >
+            <LabelList
+              dataKey={(d) => `${d.DA_Start}-${d.DA_Finish}`}
+              position="insideRight"
+              fill="#000"
+            />
+          </Bar>
+        </ComposedChart>
+      </ResponsiveContainer>
     </div>
   );
 }
