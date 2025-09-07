@@ -70,14 +70,14 @@ const currentYear = 2025;
 const getSegmentColors = (start, finish) => {
 const segments = [];
 if (currentYear < start) {
-segments.push({ start, end: finish, color: “yellow” });
+segments.push({ start, end: finish, color: "yellow" });
 } else if (currentYear > finish) {
-segments.push({ start, end: finish, color: “red” });
+segments.push({ start, end: finish, color: "red" });
 } else {
 if (start < currentYear) {
-segments.push({ start, end: currentYear, color: “yellow” });
+segments.push({ start, end: currentYear, color: "yellow" });
 }
-segments.push({ start: Math.max(start, currentYear), end: finish, color: “green” });
+segments.push({ start: Math.max(start, currentYear), end: finish, color: "green" });
 }
 return segments;
 };
