@@ -13,46 +13,39 @@ import {
 export default function BestValueTop10Graph({ data, minStart, maxFinish }) {
   const currentYear = new Date().getFullYear();
 
-  // Segment coloring
+  // --- Segment coloring ---
   const getSegmentColors = (start, finish) => {
     const segments = [];
     if (currentYear < start) {
-      // not yet drinkable
+      // Not drinkable yet
       segments.push({ start, end: finish, color: "yellow" });
     } else if (currentYear > finish) {
-      // past window
+      // Past peak
       segments.push({ start, end: finish, color: "red" });
     } else {
-      // mixed
+      // Split between not ready + drinkable
       if (start < currentYear) {
         segments.push({ start, end: currentYear, color: "yellow" });
       }
-      segments.push({
-        start: Math.max(start, currentYear),
-        end: finish,
-        color: "green",
-      });
+      segments.push({ start: Math.max(start, currentYear), end: finish, color: "green" });
     }
     return segments;
   };
 
   return (
-    <div style={{ width: "100%", height: 550 }}>
+    <div style={{ width: "100%", height: 500 }}>
       <ResponsiveContainer>
         <ComposedChart
           layout="vertical"
           data={data}
-          margin={{ top: 20, right: 30, left: 120, bottom: 20 }}
+          margin={{ top: 50, right: 30, left: 160, bottom: 50 }}
         >
+          {/* X-Axis = Years */}
           <XAxis
             type="number"
             domain={[minStart, maxFinish]}
-            tickFormatter={(v) => v}
+            tickFormatter={(value) => value}
             interval={0}
-            ticks={Array.from(
-              { length: maxFinish - minStart + 1 },
-              (_, i) => minStart + i
-            )}
             angle={-45}
             textAnchor="end"
             height={70}
@@ -62,42 +55,44 @@ export default function BestValueTop10Graph({ data, minStart, maxFinish }) {
               offset: -5,
             }}
           />
+
+          {/* Y-Axis = Wine label (Product + Vintage) */}
           <YAxis
             dataKey="Label"
             type="category"
             width={220}
             tick={{ fontSize: 12 }}
           />
+
+          {/* Tooltip */}
           <Tooltip
             formatter={(_, __, props) => [
               `${props.payload.DA_Start} - ${props.payload.DA_Finish}`,
               "Drinking Window",
             ]}
           />
+
+          {/* Legend */}
           <Legend
             verticalAlign="top"
             height={36}
-            formatter={(value) => {
-              const colorMap = {
-                yellow: "Not drinkable yet",
-                green: "Drinkable",
-                red: "Past window",
-              };
-              return colorMap[value] || value;
-            }}
+            payload={[
+              { value: "Not Ready", type: "square", color: "yellow" },
+              { value: "Optimal", type: "square", color: "green" },
+              { value: "Past Peak", type: "square", color: "red" },
+            ]}
           />
+
+          {/* Custom horizontal bars */}
           <Bar
             dataKey="DrinkingWindowWidth"
             barSize={20}
             shape={(props) => {
-              const { y, height, payload, x, xAxis } = props;
-              if (!payload || !xAxis?.scale) return null;
+              const { y, height, payload, xAxis } = props;
+              if (!payload || !xAxis) return null;
 
               const scale = xAxis.scale;
-              const segments = getSegmentColors(
-                payload.DA_Start,
-                payload.DA_Finish
-              );
+              const segments = getSegmentColors(payload.DA_Start, payload.DA_Finish);
 
               return (
                 <g>
@@ -122,6 +117,7 @@ export default function BestValueTop10Graph({ data, minStart, maxFinish }) {
               );
             }}
           >
+            {/* Label showing DA range inside each bar */}
             <LabelList
               dataKey={(d) => `${d.DA_Start}-${d.DA_Finish}`}
               position="insideRight"
