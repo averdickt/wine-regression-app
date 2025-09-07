@@ -1,58 +1,42 @@
 import React, { useMemo } from "react";
-import BestValueTable from "./BestValueTable";
-import BestValueChart from "./BestValueChart";
+import BestValueTop10Graph from "./BestValueTop10Graph";
 
 export default function BestValueTop10({ rows, selectedProduct, selectedVintage }) {
-  // — Find the selected wine —
-  const selectedRow = rows.find(
-    (r) => r.Product === selectedProduct && r.Vintage === selectedVintage
-  );
-  const selectedScore = selectedRow?.Score;
-  const region = selectedRow?.Region;
-  const wineClass = selectedRow?.Wine_Class;
-
-  // — Filter and sort top 10 wines —
+  // --- filter + sort top 10 wines by PriceValueDiff ---
   const top10 = useMemo(() => {
-    if (!selectedScore || !region || !wineClass) return [];
-
-    return rows
-      .filter(
-        (r) =>
-          r.Region === region &&
-          r.Wine_Class === wineClass &&
-          r.Score === selectedScore &&
-          r.DA_Start &&
-          r.DA_Finish &&
-          r.DA_Start >= 1900 &&
-          r.DA_Finish >= r.DA_Start
-      )
+    if (!rows || rows.length === 0) return [];
+    return [...rows]
+      .filter((r) => r.Score > 0 && r.DA_Start > 0 && r.DA_Finish > 0)
+      .sort((a, b) => a.PriceValueDiff - b.PriceValueDiff)
+      .slice(0, 10)
       .map((r) => ({
         ...r,
         Label: `${r.Product} (${r.Vintage})`,
-        DrinkingWindowStart: r.DA_Start,
         DrinkingWindowWidth: r.DA_Finish - r.DA_Start,
-      }))
-      .sort((a, b) => a.PriceValueDiff - b.PriceValueDiff)
-      .slice(0, 10);
-  }, [rows, selectedScore, region, wineClass]);
+      }));
+  }, [rows]);
 
-  // — Early return if no valid selection —
-  if (!selectedScore) {
-    return <p>Please select a Product and Vintage with a score.</p>;
-  }
-  if (top10.length === 0) {
-    return (
-      <p>
-        No matching wines found for Region: {region}, Class: {wineClass}, Score: {selectedScore}.
-      </p>
-    );
+  // --- determine axis boundaries ---
+  const minStart = useMemo(() => {
+    return top10.length > 0 ? Math.min(...top10.map((r) => r.DA_Start)) : 2000;
+  }, [top10]);
+
+  const maxFinish = useMemo(() => {
+    return top10.length > 0 ? Math.max(...top10.map((r) => r.DA_Finish)) : 2035;
+  }, [top10]);
+
+  if (!top10 || top10.length === 0) {
+    return <p>No data available for Best Value Top 10</p>;
   }
 
   return (
     <div style={{ marginTop: "20px" }}>
-      <h2>Top 10 Best Value Wines (Same Region, Class, and Score)</h2>
-      <BestValueTable top10={top10} />
-      <BestValueChart top10={top10} />
+      <h2>Best Value Top 10 (Drinking Windows)</h2>
+      <BestValueTop10Graph
+        data={top10}
+        minStart={minStart}
+        maxFinish={maxFinish}
+      />
     </div>
   );
 }
