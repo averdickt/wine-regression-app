@@ -20,7 +20,7 @@ export default function Home() {
     async function fetchDefaultData() {
       try {
         setLoading(true);
-        const response = await fetch("/processed_wine_data.xlsx");
+        const response = await fetch("/output_regression_results.xlsx");
         if (!response.ok) {
           throw new Error(`Failed to fetch Excel file: ${response.status}`);
         }
