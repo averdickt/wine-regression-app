@@ -1,70 +1,63 @@
 import React from "react";
 
-export default function BestValueTable({ top10 }) {
+export default function BestValueTable({ rows }) {
+  if (!rows || rows.length === 0) {
+    return <p>No data available for Best Value wines.</p>;
+  }
+
+  // Sort by PriceValueDiff (best value = lowest number)
+  const sorted = [...rows].sort((a, b) => a.PriceValueDiff - b.PriceValueDiff);
+
+  // Take top 10
+  const top10 = sorted.slice(0, 10);
+
   return (
-    <table
-      style={{
-        width: "100%",
-        borderCollapse: "collapse",
-        marginBottom: "20px",
-      }}
-    >
-      <thead>
-        <tr>
-          {[
-            "Region",
-            "Product",
-            "Vintage",
-            "Price",
-            "PriceValueDiff",
-            "Bid_Qty",
-            "Bid_Per_Bottle",
-            "Spread",
-            "Offer_Per_Bottle",
-            "Offer_Qty",
-          ].map((h) => (
-            <th
-              key={h}
-              style={{
-                border: "1px solid #ccc",
-                padding: "6px",
-                background: "#f9f9f9",
-              }}
-            >
-              {h}
+    <div>
+      <h3>Top 10 Best Value Wines (by Price/Value Diff)</h3>
+      <table
+        style={{
+          width: "100%",
+          borderCollapse: "collapse",
+          marginTop: "10px",
+        }}
+      >
+        <thead>
+          <tr>
+            <th style={{ borderBottom: "1px solid #ccc", textAlign: "left" }}>
+              Product
             </th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {top10.map((r, i) => {
-          const bottles = parseInt(r.Case_Format?.split(" x ")[0], 10) || 12;
-          return (
-            <tr key={i}>
-              <td style={{ border: "1px solid #ccc", padding: "6px" }}>{r.Region}</td>
-              <td style={{ border: "1px solid #ccc", padding: "6px" }}>{r.Product}</td>
-              <td style={{ border: "1px solid #ccc", padding: "6px" }}>{r.Vintage}</td>
-              <td style={{ border: "1px solid #ccc", padding: "6px" }}>
-                ${r.Price?.toFixed(2)}
+            <th style={{ borderBottom: "1px solid #ccc", textAlign: "left" }}>
+              Vintage
+            </th>
+            <th style={{ borderBottom: "1px solid #ccc", textAlign: "right" }}>
+              Score
+            </th>
+            <th style={{ borderBottom: "1px solid #ccc", textAlign: "right" }}>
+              Price (£)
+            </th>
+            <th style={{ borderBottom: "1px solid #ccc", textAlign: "right" }}>
+              Value Diff
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {top10.map((wine, idx) => (
+            <tr key={idx}>
+              <td style={{ padding: "6px 4px" }}>{wine.Product}</td>
+              <td style={{ padding: "6px 4px" }}>{wine.Vintage}</td>
+              <td style={{ padding: "6px 4px", textAlign: "right" }}>
+                {wine.Score}
               </td>
-              <td style={{ border: "1px solid #ccc", padding: "6px" }}>
-                ${r.PriceValueDiff?.toFixed(2)}
+              <td style={{ padding: "6px 4px", textAlign: "right" }}>
+                {wine.Price.toLocaleString()}
               </td>
-              <td style={{ border: "1px solid #ccc", padding: "6px" }}>{r.Bid_Qty}</td>
-              <td style={{ border: "1px solid #ccc", padding: "6px" }}>
-                ${(r.Bid_Per_Case / bottles).toFixed(2)}
+              <td style={{ padding: "6px 4px", textAlign: "right" }}>
+                {wine.PriceValueDiff.toFixed(2)}
               </td>
-              <td style={{ border: "1px solid #ccc", padding: "6px" }}>
-                {r.Spread?.toFixed(4)}
-              </td>
-              <td style={{ border: "1px solid #ccc", padding: "6px" }}>
-                ${(r.Offer_Per_Case / bottles).toFixed(2)}
-              </td>
-              <td style={{ border: "1px solid #ccc", padding: "6px" }}>{r.Offer_Qty}</td>
             </tr>
-          );
-        })}
-      </tbody>
-    </table>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
