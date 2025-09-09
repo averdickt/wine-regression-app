@@ -43,7 +43,7 @@ export default function Home() {
           DA_Start: Number(row.DA_Start) || 0,
           DA_Finish: Number(row.DA_Finish) || 0,
           Price: Number(row.Price) || 0,
-          PriceValueDiff: Number(row.PriceValueDiff) || 0,
+          PriceValueDiff: Math.round(Number(row.PriceValueDiff) || 0),
         }));
 
         setRows(normalizedData);
