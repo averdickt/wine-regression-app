@@ -30,6 +30,9 @@ export default function BestValueTop10Graph({ data }) {
     (_, i) => minDA + i * tickInterval
   );
 
+  // --- Add dummy field for bars ---
+  const chartData = data.map((d) => ({ ...d, barValue: 1 }));
+
   // --- Segment building (always cover whole axis) ---
   const getSegments = (start, finish) => {
     return [
@@ -42,6 +45,7 @@ export default function BestValueTop10Graph({ data }) {
   // --- Debugging logs ---
   useEffect(() => {
     console.log("Graph Data:", data);
+    console.log("Chart Data:", chartData);
     console.log("X-axis range:", { minDA, maxDA, tickInterval, ticks });
   }, [data, minDA, maxDA, tickInterval]);
 
@@ -50,7 +54,7 @@ export default function BestValueTop10Graph({ data }) {
       <ResponsiveContainer>
         <ComposedChart
           layout="vertical"
-          data={data}
+          data={chartData}
           margin={{ top: 20, right: 30, left: 120, bottom: 20 }}
         >
           <XAxis
@@ -77,7 +81,7 @@ export default function BestValueTop10Graph({ data }) {
             ]}
           />
           <Bar
-            dataKey="DA_Start" // dummy key
+            dataKey="barValue"
             barSize={20}
             shape={(props) => {
               const { y, height, payload, xAxis } = props;
