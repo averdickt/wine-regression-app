@@ -33,14 +33,12 @@ export default function BestValueTop10Graph({ data }) {
   // --- Add dummy field for bars ---
   const chartData = data.map((d) => ({ ...d, barValue: 1 }));
 
-  // --- Segment building (always cover whole axis) ---
-  const getSegments = (start, finish) => {
-    return [
-      { start: minDA, end: start, color: "red" }, // before drinking window
-      { start: start, end: finish, color: "green" }, // drinking window
-      { start: finish, end: maxDA, color: "yellow" }, // after drinking window
-    ];
-  };
+  // --- Segment building ---
+  const getSegments = (start, finish) => [
+    { start: minDA, end: start, color: "red" },
+    { start: start, end: finish, color: "green" },
+    { start: finish, end: maxDA, color: "yellow" },
+  ];
 
   // --- Debugging logs ---
   useEffect(() => {
@@ -59,7 +57,7 @@ export default function BestValueTop10Graph({ data }) {
         >
           <XAxis
             type="number"
-            domain={[minDA, maxDA]}
+            domain={[minDA, maxDA]} // Force drinking window years
             ticks={ticks}
             tickFormatter={(value) => Math.round(value)}
             label={{
@@ -67,6 +65,7 @@ export default function BestValueTop10Graph({ data }) {
               position: "insideBottom",
               offset: -5,
             }}
+            allowDataOverflow={true}
           />
           <YAxis
             dataKey="Label"
