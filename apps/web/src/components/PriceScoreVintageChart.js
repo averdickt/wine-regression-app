@@ -1,54 +1,83 @@
 import React from "react";
 import {
-  ComposedChart, Bar, Scatter, XAxis, YAxis, CartesianGrid, Tooltip
+  ScatterChart,
+  Scatter,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  ReferenceArea,
 } from "recharts";
 
-export default function PriceScoreVintageChart({ data, highlightVintage, DA_Start, DA_Finish }) {
-  if (!data || data.length === 0) return null;
+export default function PriceScoreVintageChart({ data, highlightVintage, colorMap }) {
+  if (!data || data.length === 0) return <p>No data available</p>;
+
+  const highlightRow = data.find((r) => r.Vintage === highlightVintage);
+  const startYear = highlightRow?.DA_Start || highlightVintage;
+  const endYear = highlightRow?.DA_Finish || highlightVintage;
+
+  // Chart domains
+  const minVintage = Math.min(...data.map((d) => d.Vintage));
+  const maxVintage = Math.max(...data.map((d) => d.Vintage));
 
   return (
-    <ComposedChart width={600} height={400} data={data}>
-      <CartesianGrid />
-      <XAxis dataKey="Vintage" />
-      <YAxis yAxisId="left" label={{ value: "Price", angle: -90 }} />
-      <YAxis yAxisId="right" orientation="right" domain={['dataMin - 1', 100]} label={{ value: "Score", angle: 90 }} />
-      <Tooltip />
+    <ResponsiveContainer width="100%" height={400}>
+      <ScatterChart>
+        <CartesianGrid />
+        <XAxis type="number" dataKey="Vintage" domain={[minVintage, maxVintage]} />
+        <YAxis type="number" dataKey="Price" />
+        <Tooltip cursor={{ strokeDasharray: "3 3" }} />
 
-      <Bar
-        yAxisId="left"
-        dataKey="Price"
-        fill="#8884d8"
-        shape={(props) => {
-          const { x, y, width, height, payload } = props;
-          let color = "grey";
-          if (payload.Vintage < DA_Start) color = "red";
-          else if (payload.Vintage > DA_Finish) color = "yellow";
-          else color = "green";
-
-          if (highlightVintage && String(payload.Vintage) === String(highlightVintage)) {
-            color = "blue"; // highlight override
-          }
-
-          return <rect x={x} y={y} width={width} height={height} fill={color} />;
-        }}
-      />
-
-      <Scatter
-        yAxisId="right"
-        dataKey="Score"
-        fill="black"
-        shape={(props) => {
-          const { cx, cy, payload } = props;
-          return (
-            <circle
-              cx={cx}
-              cy={cy}
-              r={highlightVintage && String(payload.Vintage) === String(highlightVintage) ? 8 : 4}
-              fill={highlightVintage && String(payload.Vintage) === String(highlightVintage) ? "red" : "black"}
+        {/* Background ranges */}
+        {highlightRow && (
+          <>
+            {/* Before DA_Start = red */}
+            <ReferenceArea
+              x1={minVintage}
+              x2={startYear}
+              y1={0}
+              y2="100%"
+              fill={colorMap.red}
+              fillOpacity={0.2}
             />
-          );
-        }}
-      />
-    </ComposedChart>
+            {/* Between start and finish = green */}
+            <ReferenceArea
+              x1={startYear}
+              x2={endYear}
+              y1={0}
+              y2="100%"
+              fill={colorMap.green}
+              fillOpacity={0.2}
+            />
+            {/* After DA_Finish = yellow */}
+            <ReferenceArea
+              x1={endYear}
+              x2={maxVintage}
+              y1={0}
+              y2="100%"
+              fill={colorMap.yellow}
+              fillOpacity={0.2}
+            />
+          </>
+        )}
+
+        {/* All data points */}
+        <Scatter
+          name="Wines"
+          data={data}
+          fill="#8884d8"
+        />
+
+        {/* Highlighted vintage */}
+        {highlightRow && (
+          <Scatter
+            name="Selected Vintage"
+            data={[highlightRow]}
+            fill="#FF0000"
+          />
+        )}
+      </ScatterChart>
+    </ResponsiveContainer>
   );
 }
