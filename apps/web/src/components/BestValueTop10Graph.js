@@ -30,25 +30,13 @@ export default function BestValueTop10Graph({ data }) {
     (_, i) => minDA + i * tickInterval
   );
 
-  // --- Segment coloring ---
-  const currentYear = new Date().getFullYear();
-  const getSegmentColors = (start, finish) => {
-    const segments = [];
-    if (currentYear < start) {
-      segments.push({ start, end: finish, color: "yellow" });
-    } else if (currentYear > finish) {
-      segments.push({ start, end: finish, color: "red" });
-    } else {
-      if (start < currentYear) {
-        segments.push({ start, end: currentYear, color: "yellow" });
-      }
-      segments.push({
-        start: Math.max(start, currentYear),
-        end: finish,
-        color: "green",
-      });
-    }
-    return segments;
+  // --- Segment building (always cover whole axis) ---
+  const getSegments = (start, finish) => {
+    return [
+      { start: minDA, end: start, color: "red" }, // before drinking window
+      { start: start, end: finish, color: "green" }, // drinking window
+      { start: finish, end: maxDA, color: "yellow" }, // after drinking window
+    ];
   };
 
   // --- Debugging logs ---
@@ -89,17 +77,14 @@ export default function BestValueTop10Graph({ data }) {
             ]}
           />
           <Bar
-            dataKey="DA_Start" // dummy key, we override shape
+            dataKey="DA_Start" // dummy key
             barSize={20}
             shape={(props) => {
               const { y, height, payload, xAxis } = props;
               if (!payload || !xAxis?.scale) return null;
 
               const scale = xAxis.scale;
-              const segments = getSegmentColors(
-                payload.DA_Start,
-                payload.DA_Finish
-              );
+              const segments = getSegments(payload.DA_Start, payload.DA_Finish);
 
               return (
                 <g>
@@ -117,6 +102,8 @@ export default function BestValueTop10Graph({ data }) {
                         width={rectWidth}
                         height={height}
                         fill={seg.color}
+                        stroke="black"
+                        strokeWidth={0.5}
                       />
                     );
                   })}
