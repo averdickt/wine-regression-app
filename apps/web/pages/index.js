@@ -180,7 +180,12 @@ export default function Home() {
 
         {/* BestValue Component */}
         <div style={{ marginTop: "20px" }}>
-          <BestValueTop10 rows={rows} selectedProduct={product} selectedVintage={vintage} mode={mode} />
+          <BestValueTop10
+            rows={rows}
+            selectedProduct={product}
+            selectedVintage={vintage}
+            mode={mode}
+          />
         </div>
       </div>
 
