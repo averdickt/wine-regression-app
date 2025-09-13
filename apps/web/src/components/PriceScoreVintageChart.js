@@ -1,145 +1,92 @@
-// apps/web/src/components/PriceScoreVintageChart.js
 import React from "react";
 import {
-  ResponsiveContainer,
   ComposedChart,
+  Bar,
+  Scatter,
   XAxis,
   YAxis,
-  Tooltip,
-  ReferenceArea,
-  Scatter,
   CartesianGrid,
+  Tooltip,
+  ReferenceLine,
 } from "recharts";
 
-/**
- * Previous working version (restored).
- * Expects data items to include:
- *   - Vintage (or vintage)
- *   - Price
- *   - Score (or score)
- *   - DA_Start
- *   - DA_Finish
- *   - Product
- *
- * Props:
- *  - data: array
- *  - highlightVintage: number | string (optional)
- *  - colorMap: { red, green, yellow } (optional; fallbacks provided)
- */
-export default function PriceScoreVintageChart({ data, highlightVintage, colorMap }) {
-  if (!data || data.length === 0) return <p>No data available</p>;
-
-  // fallback colors (if index.js doesn't pass a colorMap)
-  const colors = {
-    red: (colorMap && colorMap.red) || "#D32F2F",
-    green: (colorMap && colorMap.green) || "#4CAF50",
-    yellow: (colorMap && colorMap.yellow) || "#FFC107",
-  };
-
-  // support both "Vintage" and "vintage" key names
-  const vintageKey = data[0] && data[0].Vintage !== undefined ? "Vintage" : "vintage";
-  const priceKey = data[0] && data[0].Price !== undefined ? "Price" : "price";
-  const scoreKey = data[0] && data[0].Score !== undefined ? "Score" : "score";
-
-  const vintages = data
-    .map((d) => Number(d[vintageKey]))
-    .filter((v) => !Number.isNaN(v));
-
-  const minYear = Math.min(...vintages) - 3;
-  const maxYear = Math.max(...vintages) + 3;
-
-  // find highlight row if provided
-  const hv = highlightVintage !== "" && highlightVintage != null ? Number(highlightVintage) : null;
-  const highlightRow = hv !== null ? data.find((r) => Number(r[vintageKey]) === hv) : null;
+export default function PriceScoreVintageChart({
+  data,
+  highlightVintage,
+  DA_Start,
+  DA_Finish,
+}) {
+  if (!data || data.length === 0) return null;
 
   return (
-    <div style={{ width: "100%", height: 500 }}>
-      <ResponsiveContainer>
-        <ComposedChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-          <CartesianGrid />
-          <XAxis
-            type="number"
-            dataKey={vintageKey}
-            domain={[minYear, maxYear]}
-            tickFormatter={(tick) => tick.toString()}
-          />
-          <YAxis dataKey="Product" type="category" width={150} />
-          <Tooltip />
+    <ComposedChart width={600} height={400} data={data}>
+      <CartesianGrid />
+      <XAxis dataKey="Vintage" />
+      <YAxis
+        yAxisId="left"
+        label={{ value: "Price", angle: -90 }}
+      />
+      <YAxis
+        yAxisId="right"
+        orientation="right"
+        domain={["dataMin - 1", 100]}
+        label={{ value: "Score", angle: 90 }}
+      />
+      <Tooltip />
 
-          {/* If there's a highlighted vintage, draw three background bands relative to that wine */}
-          {highlightRow && (
-            <>
-              {/* Before DA_Start */}
-              <ReferenceArea
-                x1={minYear}
-                x2={Number(highlightRow.DA_Start)}
-                y1="dataMin"
-                y2="dataMax"
-                fill={colors.yellow}
-                fillOpacity={0.2}
-                stroke="none"
-              />
-              {/* Between DA_Start and DA_Finish */}
-              <ReferenceArea
-                x1={Number(highlightRow.DA_Start)}
-                x2={Number(highlightRow.DA_Finish)}
-                y1="dataMin"
-                y2="dataMax"
-                fill={colors.green}
-                fillOpacity={0.2}
-                stroke="none"
-              />
-              {/* After DA_Finish */}
-              <ReferenceArea
-                x1={Number(highlightRow.DA_Finish)}
-                x2={maxYear}
-                y1="dataMin"
-                y2="dataMax"
-                fill={colors.red}
-                fillOpacity={0.2}
-                stroke="none"
-              />
-            </>
-          )}
-
-          {/* All points */}
-          <Scatter
-            name="Wines"
-            data={data.map((d) => ({
-              ...d,
-              [vintageKey]: Number(d[vintageKey]) || 0,
-              [priceKey]: Number(d[priceKey]) || 0,
-              [scoreKey]: Number(d[scoreKey]) || 0,
-            }))}
-            dataKey={priceKey}
-            fill="#8884d8"
-          />
-
-          {/* Highlighted vintage point (if any) */}
-          {highlightRow && (
-            <Scatter
-              name="Selected Vintage"
-              data={[
-                {
-                  ...highlightRow,
-                  [vintageKey]: Number(highlightRow[vintageKey]),
-                  [priceKey]: Number(highlightRow[priceKey]),
-                },
-              ]}
-              dataKey={priceKey}
-              fill="#000"
-              shape={(props) => {
-                const { cx, cy } = props;
-                return (
-                  <g>
-                    <circle cx={cx} cy={cy} r={8} fill="#000" stroke="#fff" strokeWidth={1.5} />
-                  </g>
-                );
-              }}
+      {/* Price bars with DA logic only */}
+      <Bar
+        yAxisId="left"
+        dataKey="Price"
+        fill="#8884d8"
+        shape={(props) => {
+          const { x, y, width, height, payload } = props;
+          let color = "grey";
+          if (payload.Vintage < DA_Start) color = "red";
+          else if (payload.Vintage > DA_Finish) color = "yellow";
+          else color = "green";
+          return (
+            <rect
+              x={x}
+              y={y}
+              width={width}
+              height={height}
+              fill={color}
             />
-          )}
-        </ComposedChart>
-      </ResponsiveContainer>
-    </div>
+          );
+        }}
+      />
+
+      {/* Score scatter */}
+      <Scatter
+        yAxisId="right"
+        dataKey="Score"
+        fill="black"
+        shape={(props) => {
+          const { cx, cy, payload } = props;
+          const isHighlighted =
+            highlightVintage &&
+            String(payload.Vintage) === String(highlightVintage);
+
+          return (
+            <circle
+              cx={cx}
+              cy={cy}
+              r={isHighlighted ? 8 : 4}
+              fill={isHighlighted ? "red" : "black"}
+            />
+          );
+        }}
+      />
+
+      {/* Vertical line for highlighted vintage */}
+      {highlightVintage && (
+        <ReferenceLine
+          x={Number(highlightVintage)}
+          stroke="blue"
+          strokeDasharray="3 3"
+        />
+      )}
+    </ComposedChart>
   );
 }
