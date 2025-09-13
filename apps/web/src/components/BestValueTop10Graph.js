@@ -19,24 +19,28 @@ export default function BestValueTop10Graph({ wines, colorMap }) {
 
   const currentYear = new Date().getFullYear();
 
-  // Assign color segments based on start/finish vs today
-  const getSegmentColors = (start, finish) => {
-    const segs = [];
+  // --- segments for each wine ---
+  const getSegments = (start, finish) => {
     if (currentYear < start) {
-      segs.push({ start, end: finish, color: colorMap.green });
-      segs.unshift({ start: minDA, end: start, color: colorMap.yellow });
-      segs.push({ start: finish, end: maxDA, color: colorMap.red });
+      return [
+        { start: minDA, end: start, color: colorMap.yellow },
+        { start, end: finish, color: colorMap.green },
+        { start: finish, end: maxDA, color: colorMap.red },
+      ];
     } else if (currentYear > finish) {
-      segs.push({ start, end: finish, color: colorMap.red });
-      segs.unshift({ start: minDA, end: start, color: colorMap.yellow });
-      segs.push({ start: finish, end: maxDA, color: colorMap.yellow });
+      return [
+        { start: minDA, end: start, color: colorMap.yellow },
+        { start, end: finish, color: colorMap.red },
+        { start: finish, end: maxDA, color: colorMap.yellow },
+      ];
     } else {
-      segs.push({ start, end: currentYear, color: colorMap.yellow });
-      segs.push({ start: currentYear, end: finish, color: colorMap.green });
-      segs.unshift({ start: minDA, end: start, color: colorMap.yellow });
-      segs.push({ start: finish, end: maxDA, color: colorMap.yellow });
+      return [
+        { start: minDA, end: start, color: colorMap.yellow },
+        { start, end: currentYear, color: colorMap.yellow },
+        { start: currentYear, end: finish, color: colorMap.green },
+        { start: finish, end: maxDA, color: colorMap.yellow },
+      ];
     }
-    return segs;
   };
 
   return (
@@ -49,20 +53,19 @@ export default function BestValueTop10Graph({ wines, colorMap }) {
         >
           <XAxis type="number" domain={[minDA, maxDA]} />
           <YAxis dataKey="Product" type="category" width={200} />
-          <Tooltip
-            formatter={(_, __, props) => [
-              `${props.payload.DA_Start} - ${props.payload.DA_Finish}`,
-              "Drinking Window",
-            ]}
-          />
+          <Tooltip />
+
           <Bar
-            dataKey="DrinkingWindowWidth"
+            dataKey="DA_Finish"
             barSize={20}
             shape={(props) => {
-              const { y, height, payload, xAxis } = props;
-              if (!payload || !xAxis?.scale) return null;
-              const scale = xAxis.scale;
-              const segments = getSegmentColors(payload.DA_Start, payload.DA_Finish);
+              const { y, height, payload, x, width } = props;
+              if (!payload) return null;
+
+              const scale = (val) =>
+                x + ((val - minDA) / (maxDA - minDA)) * width;
+
+              const segments = getSegments(payload.DA_Start, payload.DA_Finish);
 
               return (
                 <g>
