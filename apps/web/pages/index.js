@@ -15,6 +15,23 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [mode, setMode] = useState("linked"); // "linked" | "all"
+  const [colorMode, setColorMode] = useState("default"); // "default" | "alt"
+
+  // --- Color Maps ---
+  const colorMaps = {
+    default: {
+      red: "#D32F2F",
+      green: "#4CAF50",
+      yellow: "#FFC107",
+    },
+    alt: {
+      red: "#7B1FA2",
+      green: "#2196F3",
+      yellow: "#FFC107",
+    },
+  };
+
+  const colorMap = colorMaps[colorMode];
 
   // --- Load default data ---
   useEffect(() => {
@@ -142,6 +159,18 @@ export default function Home() {
           <Dropdown options={vintageOptions} value={vintage} onChange={(v) => setVintage(Number(v))} />
         </div>
 
+        {/* Color Toggle */}
+        <div style={{ marginTop: "10px" }}>
+          <label>
+            <input
+              type="checkbox"
+              checked={colorMode === "alt"}
+              onChange={(e) => setColorMode(e.target.checked ? "alt" : "default")}
+            />
+            Color-blind friendly mode
+          </label>
+        </div>
+
         {/* Charts */}
         <div style={{ marginTop: "40px" }}>
           <h2>Product Regression Chart</h2>
@@ -150,7 +179,11 @@ export default function Home() {
 
         <div style={{ marginTop: "40px" }}>
           <h2>Price/Score by Vintage</h2>
-          <PriceScoreVintageChart data={rows.filter((r) => r.Product === product)} highlightVintage={vintage} />
+          <PriceScoreVintageChart
+            data={rows.filter((r) => r.Product === product)}
+            highlightVintage={vintage}
+            colorMap={colorMap}
+          />
         </div>
 
         {/* Toggle for BestValue mode */}
@@ -185,6 +218,7 @@ export default function Home() {
             selectedProduct={product}
             selectedVintage={vintage}
             mode={mode}
+            colorMap={colorMap}
           />
         </div>
       </div>
