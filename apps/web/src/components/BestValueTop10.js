@@ -12,28 +12,34 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage,
   const top10 = useMemo(() => {
     if (!rows || rows.length === 0) return [];
 
-    const validRows = rows.filter((r) => r.Score && r.DA_Start && r.DA_Finish);
-
-    const enrich = (r) => ({
-      ...r,
-      Label: `${r.Product} ${r.Vintage}`,
-      DrinkingWindowWidth: r.DA_Finish - r.DA_Start, // 👈 added field
-    });
-
     if (mode === "all") {
-      return validRows
-        .map(enrich)
+      // Global best value top 10
+      return rows
+        .filter((r) => r.Score && r.DA_Start && r.DA_Finish)
+        .map((r) => ({
+          ...r,
+          Label: `${r.Product} ${r.Vintage}`,
+        }))
         .sort((a, b) => a.PriceValueDiff - b.PriceValueDiff)
         .slice(0, 10);
     }
 
     if (mode === "linked" && selectedWine) {
+      // Based on score, region, and class of selected wine
       const { Score, Region, Wine_Class } = selectedWine;
-      return validRows
+      return rows
         .filter(
-          (r) => r.Score === Score && r.Region === Region && r.Wine_Class === Wine_Class
+          (r) =>
+            r.Score === Score &&
+            r.Region === Region &&
+            r.Wine_Class === Wine_Class &&
+            r.DA_Start &&
+            r.DA_Finish
         )
-        .map(enrich)
+        .map((r) => ({
+          ...r,
+          Label: `${r.Product} ${r.Vintage}`,
+        }))
         .sort((a, b) => a.PriceValueDiff - b.PriceValueDiff)
         .slice(0, 10);
     }
