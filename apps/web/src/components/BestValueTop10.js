@@ -11,49 +11,41 @@ export default function BestValueTop10({ rows, selectedProduct, selectedVintage,
   // 2. Compute top 10
   const top10 = useMemo(() => {
     if (!rows || rows.length === 0) return [];
+
+    const validRows = rows.filter((r) => r.Score && r.DA_Start && r.DA_Finish);
+
+    const enrich = (r) => ({
+      ...r,
+      Label: `${r.Product} ${r.Vintage}`,
+      DrinkingWindowWidth: r.DA_Finish - r.DA_Start, // 👈 added field
+    });
+
     if (mode === "all") {
-      // Global best value top 10
-      return rows
-        .filter((r) => r.Score && r.DA_Start && r.DA_Finish)
-        .map((r) => ({
-          ...r,
-          Label: `${r.Product} ${r.Vintage}`,
-          pre: Math.max(0, Math.min(r.DA_Finish, 2025) - r.DA_Start),
-          drinking: Math.max(0, Math.min(r.DA_Finish, 2025) - Math.max(r.DA_Start, 2025)),
-          post: Math.max(0, 2025 - r.DA_Finish),
-        }))
-        .sort((a, b) => a.PriceValueDiff - b.PriceValueDiff)
-        .slice(0, 10);
-    } else if (mode === "linked" && selectedWine) {
-      // Based on score, region, and class of selected wine
-      const { Score, Region, Wine_Class } = selectedWine;
-      return rows
-        .filter(
-          (r) =>
-            r.Score === Score &&
-            r.Region === Region &&
-            r.Wine_Class === Wine_Class &&
-            r.DA_Start &&
-            r.DA_Finish
-        )
-        .map((r) => ({
-          ...r,
-          Label: `${r.Product} ${r.Vintage}`,
-          pre: Math.max(0, Math.min(2025, r.DA_Start) - r.DA_Start),
-          drinking: Math.max(0, Math.min(r.DA_Finish, 2025) - Math.max(r.DA_Start, 2025)),
-          post: Math.max(0, 2025 - r.DA_Finish),
-        }))
+      return validRows
+        .map(enrich)
         .sort((a, b) => a.PriceValueDiff - b.PriceValueDiff)
         .slice(0, 10);
     }
+
+    if (mode === "linked" && selectedWine) {
+      const { Score, Region, Wine_Class } = selectedWine;
+      return validRows
+        .filter(
+          (r) => r.Score === Score && r.Region === Region && r.Wine_Class === Wine_Class
+        )
+        .map(enrich)
+        .sort((a, b) => a.PriceValueDiff - b.PriceValueDiff)
+        .slice(0, 10);
+    }
+
     return [];
   }, [rows, selectedWine, mode]);
 
   return (
     <div>
       <h2>Top 10 Best Value Wines</h2>
-      <BestValueTable wines={top10} />
-      <BestValueTop10Graph wines={top10} />
+      <BestValueTable data={top10} />
+      <BestValueTop10Graph data={top10} />
     </div>
   );
 }
