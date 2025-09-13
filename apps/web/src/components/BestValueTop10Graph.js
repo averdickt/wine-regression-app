@@ -51,6 +51,7 @@ export default function BestValueTop10Graph({ data }) {
     return segments;
   };
 
+  // --- Debugging logs ---
   useEffect(() => {
     console.log("Graph Data:", data);
     console.log("X-axis range:", { minDA, maxDA, tickInterval, ticks });
@@ -88,7 +89,7 @@ export default function BestValueTop10Graph({ data }) {
             ]}
           />
           <Bar
-            dataKey="DrinkingWindowWidth"
+            dataKey="DA_Start" // dummy key, we override shape
             barSize={20}
             shape={(props) => {
               const { y, height, payload, xAxis } = props;
