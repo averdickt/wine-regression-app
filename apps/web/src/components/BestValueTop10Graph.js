@@ -1,69 +1,97 @@
 import React from "react";
 import {
+  ResponsiveContainer,
   ComposedChart,
-  Bar,
   XAxis,
   YAxis,
-  CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
-  ReferenceArea,
+  Bar,
+  LabelList,
 } from "recharts";
 
 export default function BestValueTop10Graph({ wines, colorMap }) {
-  if (!wines || wines.length === 0) return <p>No data available</p>;
+  if (!wines || wines.length === 0) {
+    return <p>No data to display for Top 10 Best Value Wines.</p>;
+  }
 
-  // Find overall X-axis bounds
-  const minVintage = Math.min(...wines.map((w) => w.DA_Start || w.Vintage));
-  const maxVintage = Math.max(...wines.map((w) => w.DA_Finish || w.Vintage));
+  const minDA = Math.min(...wines.map((w) => w.DA_Start)) - 3;
+  const maxDA = Math.max(...wines.map((w) => w.DA_Finish)) + 3;
+
+  const currentYear = new Date().getFullYear();
+
+  // Assign color segments based on start/finish vs today
+  const getSegmentColors = (start, finish) => {
+    const segs = [];
+    if (currentYear < start) {
+      segs.push({ start, end: finish, color: colorMap.green });
+      segs.unshift({ start: minDA, end: start, color: colorMap.yellow });
+      segs.push({ start: finish, end: maxDA, color: colorMap.red });
+    } else if (currentYear > finish) {
+      segs.push({ start, end: finish, color: colorMap.red });
+      segs.unshift({ start: minDA, end: start, color: colorMap.yellow });
+      segs.push({ start: finish, end: maxDA, color: colorMap.yellow });
+    } else {
+      segs.push({ start, end: currentYear, color: colorMap.yellow });
+      segs.push({ start: currentYear, end: finish, color: colorMap.green });
+      segs.unshift({ start: minDA, end: start, color: colorMap.yellow });
+      segs.push({ start: finish, end: maxDA, color: colorMap.yellow });
+    }
+    return segs;
+  };
 
   return (
-    <ResponsiveContainer width="100%" height={400}>
-      <ComposedChart
-        layout="vertical"
-        data={wines}
-        margin={{ top: 20, right: 30, left: 100, bottom: 20 }}
-      >
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis type="number" domain={[minVintage, maxVintage]} />
-        <YAxis dataKey="Product" type="category" width={200} />
-        <Tooltip />
+    <div style={{ width: "100%", height: 550 }}>
+      <ResponsiveContainer>
+        <ComposedChart
+          layout="vertical"
+          data={wines}
+          margin={{ top: 20, right: 30, left: 120, bottom: 20 }}
+        >
+          <XAxis type="number" domain={[minDA, maxDA]} />
+          <YAxis dataKey="Product" type="category" width={200} />
+          <Tooltip
+            formatter={(_, __, props) => [
+              `${props.payload.DA_Start} - ${props.payload.DA_Finish}`,
+              "Drinking Window",
+            ]}
+          />
+          <Bar
+            dataKey="DrinkingWindowWidth"
+            barSize={20}
+            shape={(props) => {
+              const { y, height, payload, xAxis } = props;
+              if (!payload || !xAxis?.scale) return null;
+              const scale = xAxis.scale;
+              const segments = getSegmentColors(payload.DA_Start, payload.DA_Finish);
 
-        {wines.map((wine, index) => (
-          <g key={index}>
-            {/* Before DA_Start = red */}
-            <ReferenceArea
-              x1={minVintage}
-              x2={wine.DA_Start}
-              y1={index - 0.4}
-              y2={index + 0.4}
-              fill={colorMap.red}
-              fillOpacity={0.4}
+              return (
+                <g>
+                  {segments.map((seg, i) => {
+                    const segStart = scale(seg.start);
+                    const segEnd = scale(seg.end);
+                    return (
+                      <rect
+                        key={i}
+                        x={Math.min(segStart, segEnd)}
+                        y={y}
+                        width={Math.abs(segEnd - segStart)}
+                        height={height}
+                        fill={seg.color}
+                      />
+                    );
+                  })}
+                </g>
+              );
+            }}
+          >
+            <LabelList
+              dataKey={(d) => `${d.DA_Start}-${d.DA_Finish}`}
+              position="insideRight"
+              fill="#000"
             />
-            {/* Drinking window = green */}
-            <ReferenceArea
-              x1={wine.DA_Start}
-              x2={wine.DA_Finish}
-              y1={index - 0.4}
-              y2={index + 0.4}
-              fill={colorMap.green}
-              fillOpacity={0.4}
-            />
-            {/* After DA_Finish = yellow */}
-            <ReferenceArea
-              x1={wine.DA_Finish}
-              x2={maxVintage}
-              y1={index - 0.4}
-              y2={index + 0.4}
-              fill={colorMap.yellow}
-              fillOpacity={0.4}
-            />
-          </g>
-        ))}
-
-        {/* Bar overlay for PriceValueDiff */}
-        <Bar dataKey="PriceValueDiff" barSize={20} fill="#8884d8" />
-      </ComposedChart>
-    </ResponsiveContainer>
+          </Bar>
+        </ComposedChart>
+      </ResponsiveContainer>
+    </div>
   );
 }
