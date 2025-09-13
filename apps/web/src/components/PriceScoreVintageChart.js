@@ -1,62 +1,96 @@
-import React from "react";
+import React, { useState } from "react";
 import {
-  ScatterChart,
-  Scatter,
+  ResponsiveContainer,
+  ComposedChart,
   XAxis,
   YAxis,
-  CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
   ReferenceArea,
+  Scatter,
 } from "recharts";
 
-export default function PriceScoreVintageChart({ data, highlightVintage, colorMap }) {
-  if (!data || data.length === 0) return <p>No data available</p>;
+export default function PriceScoreVintageChart({ data }) {
+  const [colorBlindMode, setColorBlindMode] = useState(false);
 
-  const highlightRow = data.find((r) => r.Vintage === highlightVintage);
-  const minVintage = Math.min(...data.map((d) => d.Vintage));
-  const maxVintage = Math.max(...data.map((d) => d.Vintage));
+  if (!data || data.length === 0) {
+    return <p>No data available</p>;
+  }
+
+  // Normal color scheme
+  const normalColors = {
+    red: "#D32F2F",
+    yellow: "#FFC107",
+    green: "#4CAF50",
+  };
+
+  // Color-blind friendly scheme
+  const colorBlindColors = {
+    red: "#7B1FA2", // purple
+    yellow: "#FFC107",
+    green: "#2196F3", // blue
+  };
+
+  const colors = colorBlindMode ? colorBlindColors : normalColors;
+
+  const currentYear = new Date().getFullYear();
+  const minYear = Math.min(...data.map((d) => d.Vintage)) - 3;
+  const maxYear = Math.max(...data.map((d) => d.Vintage)) + 3;
 
   return (
-    <ResponsiveContainer width="100%" height={400}>
-      <ScatterChart>
-        <CartesianGrid />
-        <XAxis type="number" dataKey="Vintage" domain={[minVintage, maxVintage]} />
-        <YAxis type="number" dataKey="Price" />
-        <Tooltip cursor={{ strokeDasharray: "3 3" }} />
+    <div style={{ width: "100%", height: 500 }}>
+      {/* Toggle Button */}
+      <button
+        onClick={() => setColorBlindMode(!colorBlindMode)}
+        style={{ marginBottom: "10px" }}
+      >
+        Toggle Color Blind Mode
+      </button>
 
-        {highlightRow && (
-          <>
-            <ReferenceArea
-              x1={minVintage}
-              x2={highlightRow.DA_Start}
-              y1={0}
-              y2="100%"
-              fill={colorMap.red}
-              fillOpacity={0.2}
-            />
-            <ReferenceArea
-              x1={highlightRow.DA_Start}
-              x2={highlightRow.DA_Finish}
-              y1={0}
-              y2="100%"
-              fill={colorMap.green}
-              fillOpacity={0.2}
-            />
-            <ReferenceArea
-              x1={highlightRow.DA_Finish}
-              x2={maxVintage}
-              y1={0}
-              y2="100%"
-              fill={colorMap.yellow}
-              fillOpacity={0.2}
-            />
-          </>
-        )}
+      <ResponsiveContainer>
+        <ComposedChart
+          data={data}
+          margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+        >
+          <XAxis
+            type="number"
+            dataKey="Vintage"
+            domain={[minYear, maxYear]}
+            tickFormatter={(tick) => tick.toString()}
+          />
+          <YAxis dataKey="Product" type="category" width={150} />
+          <Tooltip />
 
-        <Scatter data={data} fill="#8884d8" />
-        {highlightRow && <Scatter data={[highlightRow]} fill="#FF0000" />}
-      </ScatterChart>
-    </ResponsiveContainer>
+          {/* Bars for drinking windows */}
+          {data.map((wine, index) => {
+            const { DA_Start, DA_Finish, Product } = wine;
+
+            let color;
+            if (currentYear < DA_Start) {
+              color = colors.red; // too young
+            } else if (currentYear > DA_Finish) {
+              color = colors.yellow; // past peak
+            } else {
+              color = colors.green; // optimal
+            }
+
+            return (
+              <ReferenceArea
+                key={index}
+                x1={DA_Start}
+                x2={DA_Finish}
+                y1={Product}
+                y2={Product}
+                stroke={color}
+                fill={color}
+                fillOpacity={0.6}
+              />
+            );
+          })}
+
+          {/* Scatter overlay for scores */}
+          <Scatter data={data} dataKey="Score" fill="#000" />
+        </ComposedChart>
+      </ResponsiveContainer>
+    </div>
   );
 }
