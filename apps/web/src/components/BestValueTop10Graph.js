@@ -51,7 +51,6 @@ export default function BestValueTop10Graph({ data }) {
     return segments;
   };
 
-  // --- Debugging logs ---
   useEffect(() => {
     console.log("Graph Data:", data);
     console.log("X-axis range:", { minDA, maxDA, tickInterval, ticks });
