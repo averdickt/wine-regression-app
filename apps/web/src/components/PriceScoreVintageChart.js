@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   ResponsiveContainer,
   ComposedChart,
@@ -9,43 +9,16 @@ import {
   Scatter,
 } from "recharts";
 
-export default function PriceScoreVintageChart({ data }) {
-  const [colorBlindMode, setColorBlindMode] = useState(false);
-
+export default function PriceScoreVintageChart({ data, colorMap }) {
   if (!data || data.length === 0) {
     return <p>No data available</p>;
   }
 
-  // Normal color scheme
-  const normalColors = {
-    red: "#D32F2F",
-    yellow: "#FFC107",
-    green: "#4CAF50",
-  };
-
-  // Color-blind friendly scheme
-  const colorBlindColors = {
-    red: "#7B1FA2", // purple
-    yellow: "#FFC107",
-    green: "#2196F3", // blue
-  };
-
-  const colors = colorBlindMode ? colorBlindColors : normalColors;
-
-  const currentYear = new Date().getFullYear();
-  const minYear = Math.min(...data.map((d) => d.Vintage)) - 3;
-  const maxYear = Math.max(...data.map((d) => d.Vintage)) + 3;
+  const minYear = Math.min(...data.map((d) => d.vintage)) - 3;
+  const maxYear = Math.max(...data.map((d) => d.vintage)) + 3;
 
   return (
     <div style={{ width: "100%", height: 500 }}>
-      {/* Toggle Button */}
-      <button
-        onClick={() => setColorBlindMode(!colorBlindMode)}
-        style={{ marginBottom: "10px" }}
-      >
-        Toggle Color Blind Mode
-      </button>
-
       <ResponsiveContainer>
         <ComposedChart
           data={data}
@@ -53,24 +26,22 @@ export default function PriceScoreVintageChart({ data }) {
         >
           <XAxis
             type="number"
-            dataKey="Vintage"
+            dataKey="vintage"
             domain={[minYear, maxYear]}
             tickFormatter={(tick) => tick.toString()}
           />
           <YAxis dataKey="Product" type="category" width={150} />
           <Tooltip />
 
-          {/* Bars for drinking windows */}
           {data.map((wine, index) => {
             const { DA_Start, DA_Finish, Product } = wine;
 
-            let color;
-            if (currentYear < DA_Start) {
-              color = colors.red; // too young
-            } else if (currentYear > DA_Finish) {
-              color = colors.yellow; // past peak
-            } else {
-              color = colors.green; // optimal
+            // pick colors based on drinking window
+            let color = colorMap.green;
+            if (new Date().getFullYear() < DA_Start) {
+              color = colorMap.yellow;
+            } else if (new Date().getFullYear() > DA_Finish) {
+              color = colorMap.red;
             }
 
             return (
@@ -87,8 +58,7 @@ export default function PriceScoreVintageChart({ data }) {
             );
           })}
 
-          {/* Scatter overlay for scores */}
-          <Scatter data={data} dataKey="Score" fill="#000" />
+          <Scatter data={data} dataKey="score" fill="#000" />
         </ComposedChart>
       </ResponsiveContainer>
     </div>
