@@ -62,16 +62,24 @@ export default function BestValueTop10Graph({ data }) {
           />
           <Tooltip
             formatter={(_, key, props) => {
-              if (key === "red") return [`${props.payload.DA_Start - minDA} years`, "Pre-drinking"];
-              if (key === "green") return [`${props.payload.DA_Finish - props.payload.DA_Start} years`, "Drinking"];
-              if (key === "yellow") return [`${maxDA - props.payload.DA_Finish} years`, "Post-drinking"];
+              if (!props || !props.payload) return "";
+              if (key === "red")
+                return [`${props.payload.DA_Start - minDA} years`, "Pre-drinking"];
+              if (key === "green")
+                return [
+                  `${props.payload.DA_Finish - props.payload.DA_Start} years`,
+                  "Drinking",
+                ];
+              if (key === "yellow")
+                return [`${maxDA - props.payload.DA_Finish} years`, "Post-drinking"];
               return _;
             }}
-            labelFormatter={(label, payload) =>
-              `${payload[0].payload.DA_Start} - ${payload[0].payload.DA_Finish}`
-            }
+            labelFormatter={(label, payload) => {
+              if (!payload || !payload[0] || !payload[0].payload) return "";
+              return `${payload[0].payload.DA_Start} - ${payload[0].payload.DA_Finish}`;
+            }}
           />
-          <Bar dataKey="red" stackId="a" fill="red" />
+          <Bar dataKey="red" stackId="a" fill="#D32F2F" />
           <Bar dataKey="green" stackId="a" fill="green">
             <LabelList
               dataKey={(d) => `${d.DA_Start}-${d.DA_Finish}`}
@@ -79,7 +87,7 @@ export default function BestValueTop10Graph({ data }) {
               fill="#000"
             />
           </Bar>
-          <Bar dataKey="yellow" stackId="a" fill="yellow" />
+          <Bar dataKey="yellow" stackId="a" fill="#FFC107" />
         </BarChart>
       </ResponsiveContainer>
     </div>
