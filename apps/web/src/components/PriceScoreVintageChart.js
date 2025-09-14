@@ -9,8 +9,15 @@ import {
   Tooltip,
 } from "recharts";
 
-export default function PriceScoreVintageChart({ data, highlightVintage, DA_Start, DA_Finish }) {
+export default function PriceScoreVintageChart({
+  data,
+  highlightVintage,
+  DA_Start,
+  DA_Finish,
+}) {
   if (!data || data.length === 0) return null;
+
+  const hasDA = typeof DA_Start === "number" && typeof DA_Finish === "number";
 
   return (
     <ComposedChart width={600} height={400} data={data}>
@@ -27,8 +34,7 @@ export default function PriceScoreVintageChart({ data, highlightVintage, DA_Star
         label={{ value: "Score", angle: 90 }}
       />
       <Tooltip
-        formatter={(value, key, props) => {
-          if (!props || !props.payload) return "";
+        formatter={(value, key) => {
           if (key === "Price") return [`$${value}`, "Price"];
           if (key === "Score") return [value, "Score"];
           return value;
@@ -43,18 +49,19 @@ export default function PriceScoreVintageChart({ data, highlightVintage, DA_Star
           const { x, y, width, height, payload } = props;
           if (!payload) return null;
 
-          let color = "grey";
-          if (DA_Start && DA_Finish) {
+          let color = "grey"; // fallback if no DA window
+          if (hasDA) {
             if (payload.Vintage < DA_Start) color = "#D32F2F"; // pre-drinking
             else if (payload.Vintage > DA_Finish) color = "#FFC107"; // post-drinking
-            else color = "green"; // drinking period
+            else color = "green"; // drinking
           }
 
+          // Highlight override
           if (
             highlightVintage &&
             String(payload.Vintage) === String(highlightVintage)
           ) {
-            color = "blue"; // highlight override
+            color = "blue";
           }
 
           return <rect x={x} y={y} width={width} height={height} fill={color} />;
@@ -68,6 +75,7 @@ export default function PriceScoreVintageChart({ data, highlightVintage, DA_Star
         shape={(props) => {
           const { cx, cy, payload } = props;
           if (!payload) return null;
+
           const isHighlight =
             highlightVintage &&
             String(payload.Vintage) === String(highlightVintage);
