@@ -5,14 +5,16 @@
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
-    "ios": "expo start --ios",
-    "victory-native": "^36.6.8"
+    "ios": "expo start --ios"
   },
   "dependencies": {
     "expo": "~51.0.8",
     "react": "18.2.0",
     "react-native": "0.74.5",
-    "xlsx": "^0.18.5"
+    "victory-native": "^36.6.8",
+    "@react-native-picker/picker": "^2.5.1",
+    "xlsx": "^0.18.5",
+    "socket.io-client": "^4.7.5"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"
