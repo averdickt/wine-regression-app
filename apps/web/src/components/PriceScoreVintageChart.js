@@ -1,6 +1,5 @@
 import React from "react";
 import {
-  ResponsiveContainer,
   ComposedChart,
   Bar,
   Scatter,
@@ -8,6 +7,7 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
+  Legend,
 } from "recharts";
 
 export default function PriceScoreVintageChart({
@@ -17,122 +17,175 @@ export default function PriceScoreVintageChart({
 }) {
   if (!data || data.length === 0) return null;
 
-  const colors = colorMap || {
-    red: "#D32F2F",
-    green: "#4CAF50",
-    yellow: "#FFC107",
-  };
-
   const currentYear = new Date().getFullYear();
 
+  // Get selected vintage details
+  const selected =
+    highlightVintage &&
+    data.find((d) => String(d.Vintage) === String(highlightVintage));
+
   return (
-    <div style={{ width: "100%", height: 400 }}>
-      <ResponsiveContainer>
-        <ComposedChart
-          data={data}
-          margin={{ top: 8, right: 20, left: 20, bottom: 40 }} // more bottom for rotated labels
+    <div>
+      <ComposedChart width={700} height={400} data={data}>
+        <CartesianGrid />
+        <XAxis
+          dataKey="Vintage"
+          angle={-45}
+          textAnchor="end"
+          interval={0}
+          height={60}
+        />
+        <YAxis
+          yAxisId="left"
+          label={{ value: "Price", angle: -90, position: "insideLeft" }}
+        />
+        <YAxis
+          yAxisId="right"
+          orientation="right"
+          domain={["dataMin - 1", 100]}
+          label={{ value: "Score", angle: 90, position: "insideRight" }}
+        />
+        <Tooltip
+          formatter={(value, key) => {
+            if (key === "Price") return [`$${value}`, "Price"];
+            if (key === "Score") return [value, "Score"];
+            return value;
+          }}
+          labelFormatter={(label, payload) => {
+            if (payload && payload.length > 0) {
+              const { DA_Start, DA_Finish } = payload[0].payload;
+              return `Vintage: ${label}\nDrinking Window: ${DA_Start}–${DA_Finish}`;
+            }
+            return `Vintage: ${label}`;
+          }}
+        />
+        <Legend
+          verticalAlign="top"
+          align="center"
+          wrapperStyle={{ paddingBottom: "20px" }}
+          payload={[
+            { value: "Pre-drinking", type: "square", color: colorMap.yellow },
+            { value: "Drinking", type: "square", color: colorMap.green },
+            { value: "Post-drinking", type: "square", color: colorMap.red },
+            { value: "Highlighted", type: "square", color: "blue" },
+          ]}
+        />
+
+        <Bar
+          yAxisId="left"
+          dataKey="Price"
+          shape={(props) => {
+            const { x, y, width, height, payload } = props;
+            let color = colorMap.yellow; // default fallback
+
+            if (currentYear < payload.DA_Start) {
+              color = colorMap.yellow; // pre-drinking
+            } else if (currentYear > payload.DA_Finish) {
+              color = colorMap.red; // post-drinking
+            } else {
+              color = colorMap.green; // drinking
+            }
+
+            if (
+              highlightVintage &&
+              String(payload.Vintage) === String(highlightVintage)
+            ) {
+              color = "blue"; // highlight override
+            }
+
+            return (
+              <rect x={x} y={y} width={width} height={height} fill={color} />
+            );
+          }}
+        />
+
+        <Scatter
+          yAxisId="right"
+          dataKey="Score"
+          fill="black"
+          shape={(props) => {
+            const { cx, cy, payload } = props;
+            return (
+              <circle
+                cx={cx}
+                cy={cy}
+                r={
+                  highlightVintage &&
+                  String(payload.Vintage) === String(highlightVintage)
+                    ? 8
+                    : 4
+                }
+                fill={
+                  highlightVintage &&
+                  String(payload.Vintage) === String(highlightVintage)
+                    ? "red"
+                    : "black"
+                }
+              />
+            );
+          }}
+        />
+      </ComposedChart>
+
+      {/* --- Details Panel --- */}
+      {selected && (
+        <div
+          style={{
+            marginTop: "15px",
+            padding: "10px",
+            border: "1px solid #ccc",
+            borderRadius: "6px",
+            backgroundColor: "#fafafa",
+            width: "fit-content",
+          }}
         >
-          <CartesianGrid />
-
-          {/* Categorical vintages, rotated ticks */}
-          <XAxis
-            dataKey="Vintage"
-            type="category"
-            interval={0} // show all vintages
-            tick={({ x, y, payload }) => (
-              <g transform={`translate(${x},${y + 10})`}>
-                <text
-                  x={0}
-                  y={0}
-                  dy={16}
-                  textAnchor="end"
-                  transform="rotate(-45)"
-                  style={{ fontSize: 11 }}
-                >
-                  {payload.value}
-                </text>
-              </g>
-            )}
-          />
-
-          <YAxis
-            yAxisId="left"
-            label={{ value: "Price", angle: -90, position: "insideLeft" }}
-          />
-          <YAxis
-            yAxisId="right"
-            orientation="right"
-            domain={["dataMin - 1", 100]}
-            label={{ value: "Score", angle: 90, position: "insideRight" }}
-          />
-
-          <Tooltip
-            formatter={(value, key) => {
-              if (key === "Price") return [`$${value}`, "Price"];
-              if (key === "Score") return [value, "Score"];
-              return value;
+          <h3 style={{ margin: "0 0 10px 0" }}>
+            {selected.Product} ({selected.Vintage})
+          </h3>
+          <table
+            style={{
+              borderCollapse: "collapse",
+              width: "100%",
+              fontSize: "14px",
             }}
-            labelFormatter={(label) => `Vintage: ${label}`}
-          />
-
-          <Bar
-            yAxisId="left"
-            dataKey="Price"
-            isAnimationActive={false}
-            shape={(props) => {
-              const { x, y, width, height, payload } = props;
-              if (!payload) return null;
-
-              const start = Number(payload.DA_Start);
-              const finish = Number(payload.DA_Finish);
-              let color = "grey";
-
-              if (!isNaN(start) && !isNaN(finish)) {
-                if (currentYear > finish) color = colors.red;
-                else if (currentYear < start) color = colors.yellow;
-                else color = colors.green;
-              }
-
-              const isHighlight =
-                highlightVintage &&
-                String(payload.Vintage) === String(highlightVintage);
-
-              return (
-                <rect
-                  x={x}
-                  y={y}
-                  width={width}
-                  height={height}
-                  fill={color}
-                  stroke={isHighlight ? "#000" : "none"}
-                  strokeWidth={isHighlight ? 2 : 0}
-                />
-              );
-            }}
-          />
-
-          <Scatter
-            yAxisId="right"
-            dataKey="Score"
-            fill="#000"
-            shape={(props) => {
-              const { cx, cy, payload } = props;
-              if (!payload) return null;
-              const isHighlight =
-                highlightVintage &&
-                String(payload.Vintage) === String(highlightVintage);
-              return (
-                <circle
-                  cx={cx}
-                  cy={cy}
-                  r={isHighlight ? 7 : 4}
-                  fill={isHighlight ? colors.red : "#000"}
-                />
-              );
-            }}
-          />
-        </ComposedChart>
-      </ResponsiveContainer>
+          >
+            <tbody>
+              <tr>
+                <td style={{ border: "1px solid #ccc", padding: "6px" }}>
+                  <strong>Bid</strong>
+                </td>
+                <td style={{ border: "1px solid #ccc", padding: "6px" }}>
+                  {selected.Bid_Qty} @ ${selected.Bid_Per_Case}
+                </td>
+              </tr>
+              <tr>
+                <td style={{ border: "1px solid #ccc", padding: "6px" }}>
+                  <strong>Offer</strong>
+                </td>
+                <td style={{ border: "1px solid #ccc", padding: "6px" }}>
+                  {selected.Offer_Qty} @ ${selected.Offer_Per_Case}
+                </td>
+              </tr>
+              <tr>
+                <td style={{ border: "1px solid #ccc", padding: "6px" }}>
+                  <strong>Spread</strong>
+                </td>
+                <td style={{ border: "1px solid #ccc", padding: "6px" }}>
+                  {selected.Spread}%
+                </td>
+              </tr>
+              <tr>
+                <td style={{ border: "1px solid #ccc", padding: "6px" }}>
+                  <strong>Drinking Window</strong>
+                </td>
+                <td style={{ border: "1px solid #ccc", padding: "6px" }}>
+                  {selected.DA_Start} – {selected.DA_Finish}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
