@@ -178,13 +178,19 @@ export default function Home() {
         </div>
 
         <div style={{ marginTop: "40px" }}>
-          <h2>Price/Score by Vintage</h2>
-          <PriceScoreVintageChart
-            data={rows.filter((r) => r.Product === product)}
-            highlightVintage={vintage}
-            colorMap={colorMap}
-          />
-        </div>
+  <h2>Price/Score by Vintage</h2>
+  <PriceScoreVintageChart
+    data={rows.filter((r) => r.Product === product)}
+    highlightVintage={vintage}
+    DA_Start={
+      rows.find((r) => r.Product === product && r.Vintage === vintage)?.DA_Start
+    }
+    DA_Finish={
+      rows.find((r) => r.Product === product && r.Vintage === vintage)?.DA_Finish
+    }
+    colorMap={colorMap}
+  />
+</div>
 
         {/* Toggle for BestValue mode */}
         <div style={{ marginTop: "40px" }}>
