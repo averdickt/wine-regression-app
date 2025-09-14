@@ -1,6 +1,12 @@
 import React from "react";
 import {
-  ComposedChart, Bar, Scatter, XAxis, YAxis, CartesianGrid, Tooltip
+  ComposedChart,
+  Bar,
+  Scatter,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
 } from "recharts";
 
 export default function PriceScoreVintageChart({ data, highlightVintage, DA_Start, DA_Finish }) {
@@ -10,22 +16,44 @@ export default function PriceScoreVintageChart({ data, highlightVintage, DA_Star
     <ComposedChart width={600} height={400} data={data}>
       <CartesianGrid />
       <XAxis dataKey="Vintage" />
-      <YAxis yAxisId="left" label={{ value: "Price", angle: -90 }} />
-      <YAxis yAxisId="right" orientation="right" domain={['dataMin - 1', 100]} label={{ value: "Score", angle: 90 }} />
-      <Tooltip />
+      <YAxis
+        yAxisId="left"
+        label={{ value: "Price", angle: -90 }}
+      />
+      <YAxis
+        yAxisId="right"
+        orientation="right"
+        domain={["dataMin - 1", 100]}
+        label={{ value: "Score", angle: 90 }}
+      />
+      <Tooltip
+        formatter={(value, key, props) => {
+          if (!props || !props.payload) return "";
+          if (key === "Price") return [`$${value}`, "Price"];
+          if (key === "Score") return [value, "Score"];
+          return value;
+        }}
+        labelFormatter={(label) => `Vintage: ${label}`}
+      />
 
       <Bar
         yAxisId="left"
         dataKey="Price"
-        fill="#8884d8"
         shape={(props) => {
           const { x, y, width, height, payload } = props;
-          let color = "grey";
-          if (payload.Vintage < DA_Start) color = "red";
-          else if (payload.Vintage > DA_Finish) color = "yellow";
-          else color = "green";
+          if (!payload) return null;
 
-          if (highlightVintage && String(payload.Vintage) === String(highlightVintage)) {
+          let color = "grey";
+          if (DA_Start && DA_Finish) {
+            if (payload.Vintage < DA_Start) color = "#D32F2F"; // pre-drinking
+            else if (payload.Vintage > DA_Finish) color = "#FFC107"; // post-drinking
+            else color = "green"; // drinking period
+          }
+
+          if (
+            highlightVintage &&
+            String(payload.Vintage) === String(highlightVintage)
+          ) {
             color = "blue"; // highlight override
           }
 
@@ -39,12 +67,17 @@ export default function PriceScoreVintageChart({ data, highlightVintage, DA_Star
         fill="black"
         shape={(props) => {
           const { cx, cy, payload } = props;
+          if (!payload) return null;
+          const isHighlight =
+            highlightVintage &&
+            String(payload.Vintage) === String(highlightVintage);
+
           return (
             <circle
               cx={cx}
               cy={cy}
-              r={highlightVintage && String(payload.Vintage) === String(highlightVintage) ? 8 : 4}
-              fill={highlightVintage && String(payload.Vintage) === String(highlightVintage) ? "red" : "black"}
+              r={isHighlight ? 8 : 4}
+              fill={isHighlight ? "#D32F2F" : "black"}
             />
           );
         }}
