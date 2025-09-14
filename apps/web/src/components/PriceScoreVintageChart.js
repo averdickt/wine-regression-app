@@ -1,5 +1,6 @@
 import React from "react";
 import {
+  ResponsiveContainer,
   ComposedChart,
   Bar,
   Scatter,
@@ -12,84 +13,97 @@ import {
 export default function PriceScoreVintageChart({
   data,
   highlightVintage,
-  DA_Start,
-  DA_Finish,
+  colorMap,
 }) {
   if (!data || data.length === 0) return null;
 
-  const hasDA = typeof DA_Start === "number" && typeof DA_Finish === "number";
+  // default color map (falls back if index.js doesn't pass one)
+  const colors = colorMap || {
+    red: "#D32F2F",
+    green: "#4CAF50",
+    yellow: "#FFC107",
+  };
+
+  const currentYear = new Date().getFullYear();
 
   return (
-    <ComposedChart width={600} height={400} data={data}>
-      <CartesianGrid />
-      <XAxis dataKey="Vintage" />
-      <YAxis
-        yAxisId="left"
-        label={{ value: "Price", angle: -90 }}
-      />
-      <YAxis
-        yAxisId="right"
-        orientation="right"
-        domain={["dataMin - 1", 100]}
-        label={{ value: "Score", angle: 90 }}
-      />
-      <Tooltip
-        formatter={(value, key) => {
-          if (key === "Price") return [`$${value}`, "Price"];
-          if (key === "Score") return [value, "Score"];
-          return value;
-        }}
-        labelFormatter={(label) => `Vintage: ${label}`}
-      />
+    <div style={{ width: "100%", height: 400 }}>
+      <ResponsiveContainer>
+        <ComposedChart data={data} margin={{ top: 8, right: 20, left: 20, bottom: 8 }}>
+          <CartesianGrid />
+          <XAxis dataKey="Vintage" type="number" />
+          <YAxis yAxisId="left" label={{ value: "Price", angle: -90, position: "insideLeft" }} />
+          <YAxis
+            yAxisId="right"
+            orientation="right"
+            domain={["dataMin - 1", 100]}
+            label={{ value: "Score", angle: 90, position: "insideRight" }}
+          />
 
-      <Bar
-        yAxisId="left"
-        dataKey="Price"
-        shape={(props) => {
-          const { x, y, width, height, payload } = props;
-          if (!payload) return null;
+          <Tooltip
+            formatter={(value, key, props) => {
+              if (!props || !props.payload) return "";
+              if (key === "Price") return [`$${value}`, "Price"];
+              if (key === "Score") return [value, "Score"];
+              return value;
+            }}
+            labelFormatter={(label) => `Vintage: ${label}`}
+          />
 
-          let color = "grey"; // fallback if no DA window
-          if (hasDA) {
-            if (payload.Vintage < DA_Start) color = "#D32F2F"; // pre-drinking
-            else if (payload.Vintage > DA_Finish) color = "#FFC107"; // post-drinking
-            else color = "green"; // drinking
-          }
+          {/* Price bars: color determined by each payload's DA_Start / DA_Finish vs currentYear */}
+          <Bar
+            yAxisId="left"
+            dataKey="Price"
+            isAnimationActive={false}
+            shape={(props) => {
+              const { x, y, width, height, payload } = props;
+              if (!payload) return null;
 
-          // Highlight override
-          if (
-            highlightVintage &&
-            String(payload.Vintage) === String(highlightVintage)
-          ) {
-            color = "blue";
-          }
+              const start = Number(payload.DA_Start);
+              const finish = Number(payload.DA_Finish);
+              let color = "grey"; // fallback
 
-          return <rect x={x} y={y} width={width} height={height} fill={color} />;
-        }}
-      />
+              if (!isNaN(start) && !isNaN(finish)) {
+                if (currentYear > finish) {
+                  // past drinking window
+                  color = colors.red;
+                } else if (currentYear < start) {
+                  // not yet ready
+                  color = colors.yellow;
+                } else {
+                  // within drinking window
+                  color = colors.green;
+                }
+              }
 
-      <Scatter
-        yAxisId="right"
-        dataKey="Score"
-        fill="black"
-        shape={(props) => {
-          const { cx, cy, payload } = props;
-          if (!payload) return null;
+              // highlight override (selected vintage)
+              if (highlightVintage && String(payload.Vintage) === String(highlightVintage)) {
+                // make it distinct (black border + slightly different fill)
+                return (
+                  <g>
+                    <rect x={x} y={y} width={width} height={height} fill={color} stroke="#000" strokeWidth={1.5} />
+                  </g>
+                );
+              }
 
-          const isHighlight =
-            highlightVintage &&
-            String(payload.Vintage) === String(highlightVintage);
+              return <rect x={x} y={y} width={width} height={height} fill={color} />;
+            }}
+          />
 
-          return (
-            <circle
-              cx={cx}
-              cy={cy}
-              r={isHighlight ? 8 : 4}
-              fill={isHighlight ? "#D32F2F" : "black"}
-            />
-          );
-        }}
-      />
-    </ComposedChart>
+          {/* Score points (right axis) */}
+          <Scatter
+            yAxisId="right"
+            dataKey="Score"
+            fill="#000"
+            shape={(props) => {
+              const { cx, cy, payload } = props;
+              if (!payload) return null;
+              const isHighlight = highlightVintage && String(payload.Vintage) === String(highlightVintage);
+              return <circle cx={cx} cy={cy} r={isHighlight ? 7 : 4} fill={isHighlight ? colors.red : "#000"} />;
+            }}
+          />
+        </ComposedChart>
+      </ResponsiveContainer>
+    </div>
   );
 }
