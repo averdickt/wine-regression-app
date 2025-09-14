@@ -17,7 +17,6 @@ export default function PriceScoreVintageChart({
 }) {
   if (!data || data.length === 0) return null;
 
-  // default color map (falls back if index.js doesn't pass one)
   const colors = colorMap || {
     red: "#D32F2F",
     green: "#4CAF50",
@@ -26,13 +25,32 @@ export default function PriceScoreVintageChart({
 
   const currentYear = new Date().getFullYear();
 
+  // Calculate min/max vintages from this product’s data
+  const vintages = data.map((d) => Number(d.Vintage)).filter((v) => !isNaN(v));
+  const minVintage = Math.min(...vintages);
+  const maxVintage = Math.max(...vintages);
+
   return (
     <div style={{ width: "100%", height: 400 }}>
       <ResponsiveContainer>
-        <ComposedChart data={data} margin={{ top: 8, right: 20, left: 20, bottom: 8 }}>
+        <ComposedChart
+          data={data}
+          margin={{ top: 8, right: 20, left: 20, bottom: 8 }}
+        >
           <CartesianGrid />
-          <XAxis dataKey="Vintage" type="number" />
-          <YAxis yAxisId="left" label={{ value: "Price", angle: -90, position: "insideLeft" }} />
+
+          {/* X-axis explicitly bounded to product’s vintage range */}
+          <XAxis
+            dataKey="Vintage"
+            type="number"
+            domain={[minVintage, maxVintage]}
+            tickFormatter={(tick) => String(tick)}
+          />
+
+          <YAxis
+            yAxisId="left"
+            label={{ value: "Price", angle: -90, position: "insideLeft" }}
+          />
           <YAxis
             yAxisId="right"
             orientation="right"
@@ -41,8 +59,7 @@ export default function PriceScoreVintageChart({
           />
 
           <Tooltip
-            formatter={(value, key, props) => {
-              if (!props || !props.payload) return "";
+            formatter={(value, key) => {
               if (key === "Price") return [`$${value}`, "Price"];
               if (key === "Score") return [value, "Score"];
               return value;
@@ -50,7 +67,6 @@ export default function PriceScoreVintageChart({
             labelFormatter={(label) => `Vintage: ${label}`}
           />
 
-          {/* Price bars: color determined by each payload's DA_Start / DA_Finish vs currentYear */}
           <Bar
             yAxisId="left"
             dataKey="Price"
@@ -61,36 +77,32 @@ export default function PriceScoreVintageChart({
 
               const start = Number(payload.DA_Start);
               const finish = Number(payload.DA_Finish);
-              let color = "grey"; // fallback
+              let color = "grey";
 
               if (!isNaN(start) && !isNaN(finish)) {
-                if (currentYear > finish) {
-                  // past drinking window
-                  color = colors.red;
-                } else if (currentYear < start) {
-                  // not yet ready
-                  color = colors.yellow;
-                } else {
-                  // within drinking window
-                  color = colors.green;
-                }
+                if (currentYear > finish) color = colors.red;
+                else if (currentYear < start) color = colors.yellow;
+                else color = colors.green;
               }
 
-              // highlight override (selected vintage)
-              if (highlightVintage && String(payload.Vintage) === String(highlightVintage)) {
-                // make it distinct (black border + slightly different fill)
-                return (
-                  <g>
-                    <rect x={x} y={y} width={width} height={height} fill={color} stroke="#000" strokeWidth={1.5} />
-                  </g>
-                );
-              }
+              const isHighlight =
+                highlightVintage &&
+                String(payload.Vintage) === String(highlightVintage);
 
-              return <rect x={x} y={y} width={width} height={height} fill={color} />;
+              return (
+                <rect
+                  x={x}
+                  y={y}
+                  width={width}
+                  height={height}
+                  fill={color}
+                  stroke={isHighlight ? "#000" : "none"}
+                  strokeWidth={isHighlight ? 2 : 0}
+                />
+              );
             }}
           />
 
-          {/* Score points (right axis) */}
           <Scatter
             yAxisId="right"
             dataKey="Score"
@@ -98,8 +110,17 @@ export default function PriceScoreVintageChart({
             shape={(props) => {
               const { cx, cy, payload } = props;
               if (!payload) return null;
-              const isHighlight = highlightVintage && String(payload.Vintage) === String(highlightVintage);
-              return <circle cx={cx} cy={cy} r={isHighlight ? 7 : 4} fill={isHighlight ? colors.red : "#000"} />;
+              const isHighlight =
+                highlightVintage &&
+                String(payload.Vintage) === String(highlightVintage);
+              return (
+                <circle
+                  cx={cx}
+                  cy={cy}
+                  r={isHighlight ? 7 : 4}
+                  fill={isHighlight ? colors.red : "#000"}
+                />
+              );
             }}
           />
         </ComposedChart>
