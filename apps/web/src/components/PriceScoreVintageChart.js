@@ -25,26 +25,34 @@ export default function PriceScoreVintageChart({
 
   const currentYear = new Date().getFullYear();
 
-  // Calculate min/max vintages from this product’s data
-  const vintages = data.map((d) => Number(d.Vintage)).filter((v) => !isNaN(v));
-  const minVintage = Math.min(...vintages);
-  const maxVintage = Math.max(...vintages);
-
   return (
     <div style={{ width: "100%", height: 400 }}>
       <ResponsiveContainer>
         <ComposedChart
           data={data}
-          margin={{ top: 8, right: 20, left: 20, bottom: 8 }}
+          margin={{ top: 8, right: 20, left: 20, bottom: 40 }} // more bottom for rotated labels
         >
           <CartesianGrid />
 
-          {/* X-axis explicitly bounded to product’s vintage range */}
+          {/* Categorical vintages, rotated ticks */}
           <XAxis
             dataKey="Vintage"
-            type="number"
-            domain={[minVintage, maxVintage]}
-            tickFormatter={(tick) => String(tick)}
+            type="category"
+            interval={0} // show all vintages
+            tick={({ x, y, payload }) => (
+              <g transform={`translate(${x},${y + 10})`}>
+                <text
+                  x={0}
+                  y={0}
+                  dy={16}
+                  textAnchor="end"
+                  transform="rotate(-45)"
+                  style={{ fontSize: 11 }}
+                >
+                  {payload.value}
+                </text>
+              </g>
+            )}
           />
 
           <YAxis
