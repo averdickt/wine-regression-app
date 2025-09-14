@@ -43,8 +43,8 @@ export default function PriceScoreVintageChart({ data, highlightVintage, DA_Star
             <circle
               cx={cx}
               cy={cy}
-              r={highlightVintage && payload.Vintage === highlightVintage ? 8 : 4}
-              fill={highlightVintage && payload.Vintage === highlightVintage ? "red" : "black"}
+              r={highlightVintage && String(payload.Vintage) === String(highlightVintage) ? 8 : 4}
+              fill={highlightVintage && String(payload.Vintage) === String(highlightVintage) ? "red" : "black"}
             />
           );
         }}
