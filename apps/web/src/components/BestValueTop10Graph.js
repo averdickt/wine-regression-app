@@ -9,7 +9,7 @@ import {
   LabelList,
 } from "recharts";
 
-export default function BestValueTop10Graph({ data }) {
+export default function BestValueTop10Graph({ data, colorMap }) {
   if (!data || data.length === 0) {
     return <p>No data to display for Top 10 Best Value Wines.</p>;
   }
