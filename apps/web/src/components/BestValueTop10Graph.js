@@ -9,45 +9,7 @@ import {
   LabelList,
 } from "recharts";
 
-export default function BestValueTop10Graph({ data, colorMap }) {
-  if (!data || data.length === 0) {
-    return <p>No data to display for Top 10 Best Value Wines.</p>;
-  }
-
-  // --- Axis bounds ---
-  const minDA = Math.min(...data.map((w) => w.DA_Start)) - 3;
-  const maxDA = Math.max(...data.map((w) => w.DA_Finish)) + 3;
-
-  // --- Transform into stacked offsets ---
-  const chartData = data.map((d) => {
-    return {
-      Label: d.Label,
-      red: d.DA_Start - minDA, // years before drinking
-      green: d.DA_Finish - d.DA_Start, // drinking period
-      yellow: maxDA - d.DA_Finish, // years after drinking
-      DA_Start: d.DA_Start,
-      DA_Finish: d.DA_Finish,
-    };
-  });
-
-  // --- Debugging ---
-  useEffect(() => {
-    console.log("Chart Data (offsets):", chartData);
-    console.log("X-axis range:", { minDA, maxDA });
-  }, [chartData, minDA, maxDA]);
-
-  import React, { useEffect } from "react";
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  LabelList,
-} from "recharts";
-
-export default function BestValueTop10Graph({ data, colorMap }) {
+export default function BestValueTop10Graph({ data }) {
   if (!data || data.length === 0) {
     return <p>No data to display for Top 10 Best Value Wines.</p>;
   }
