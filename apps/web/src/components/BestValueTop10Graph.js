@@ -6,88 +6,89 @@ import {
   XAxis,
   YAxis,
   Tooltip,
+  Legend,
   LabelList,
 } from "recharts";
 
-export default function BestValueTop10Graph({ data }) {
+export default function BestValueTop10Graph({ data, colorMap = { red: "#D32F2F", green: "#4CAF50", yellow: "#FFC107" } }) {
   if (!data || data.length === 0) {
     return <p>No data to display for Top 10 Best Value Wines.</p>;
   }
 
-  // --- Axis bounds ---
-  const minDA = Math.min(...data.map((w) => w.DA_Start)) - 3;
-  const maxDA = Math.max(...data.map((w) => w.DA_Finish)) + 3;
+  const minDA = Math.min(...data.map((w) => Number(w.DA_Start))) - 3;
+  const maxDA = Math.max(...data.map((w) => Number(w.DA_Finish))) + 3;
+  const totalRange = maxDA - minDA;
 
-  // --- Transform into stacked offsets ---
+  // convert to stacked offsets so each row becomes [pre, drinking, post]
   const chartData = data.map((d) => {
+    const daStart = Number(d.DA_Start);
+    const daFinish = Number(d.DA_Finish);
     return {
       Label: d.Label,
-      red: d.DA_Start - minDA, // years before drinking
-      green: d.DA_Finish - d.DA_Start, // drinking period
-      yellow: maxDA - d.DA_Finish, // years after drinking
-      DA_Start: d.DA_Start,
-      DA_Finish: d.DA_Finish,
+      DA_Start: daStart,
+      DA_Finish: daFinish,
+      pre: Math.max(0, daStart - minDA),
+      drink: Math.max(0, daFinish - daStart),
+      post: Math.max(0, maxDA - daFinish),
     };
   });
 
-  // --- Debugging ---
   useEffect(() => {
-    console.log("Chart Data (offsets):", chartData);
-    console.log("X-axis range:", { minDA, maxDA });
-  }, [chartData, minDA, maxDA]);
+    console.log("Rendered BestValueTop10Graph - chartData:", chartData);
+  }, [chartData]);
 
   return (
-    <div style={{ width: "100%", height: 550 }}>
+    <div style={{ width: "100%", height: 520 }}>
       <ResponsiveContainer>
         <BarChart
           data={chartData}
           layout="vertical"
-          margin={{ top: 20, right: 30, left: 120, bottom: 20 }}
+          margin={{ top: 20, right: 30, left: 160, bottom: 20 }}
         >
           <XAxis
             type="number"
-            domain={[0, maxDA - minDA]} // axis in offsets
-            tickFormatter={(value) => minDA + value} // show real years
-            label={{
-              value: "Drinking Window (Years)",
-              position: "insideBottom",
-              offset: -5,
-            }}
+            domain={[0, totalRange]}
+            tickFormatter={(v) => minDA + v}
+            label={{ value: "Drinking Window (Years)", position: "insideBottom", offset: -5 }}
+            tick={{ fontSize: 12 }}
           />
           <YAxis
             dataKey="Label"
             type="category"
-            width={200}
+            width={180}
             tick={{ fontSize: 12 }}
           />
+
           <Tooltip
-            formatter={(_, key, props) => {
-              if (!props || !props.payload) return "";
-              if (key === "red")
-                return [`${props.payload.DA_Start - minDA} years`, "Pre-drinking"];
-              if (key === "green")
-                return [
-                  `${props.payload.DA_Finish - props.payload.DA_Start} years`,
-                  "Drinking",
-                ];
-              if (key === "yellow")
-                return [`${maxDA - props.payload.DA_Finish} years`, "Post-drinking"];
-              return _;
+            formatter={(value, key, props) => {
+              if (!props || !props.payload) return [value, key];
+              const payload = props.payload;
+              if (key === "pre") return [`${payload.DA_Start - minDA} years`, "Pre-drinking"];
+              if (key === "drink") return [`${payload.DA_Finish - payload.DA_Start} years`, "Drinking"];
+              if (key === "post") return [`${maxDA - payload.DA_Finish} years`, "Post-drinking"];
+              return [value, key];
             }}
             labelFormatter={(label, payload) => {
               if (!payload || !payload[0] || !payload[0].payload) return "";
-              return `${payload[0].payload.DA_Start} - ${payload[0].payload.DA_Finish}`;
+              const p = payload[0].payload;
+              return `${p.DA_Start} - ${p.DA_Finish}`;
             }}
           />
-          <Bar dataKey="red" stackId="a" fill="#D32F2F" />
-          <Bar dataKey="green" stackId="a" fill="green">
-            <LabelList
-              dataKey={(d) => `${d.DA_Start}-${d.DA_Finish}`}
-              position="insideRight"
-              fill="#000"
-            />
+
+          <Legend
+            verticalAlign="top"
+            payload={[
+              { value: "Pre-drinking", type: "square", color: colorMap.red },
+              { value: "Drinking", type: "square", color: colorMap.green },
+              { value: "Post-drinking", type: "square", color: colorMap.yellow },
+            ]}
+          />
+
+          <Bar dataKey="pre" stackId="a" fill={colorMap.red} />
+          <Bar dataKey="drink" stackId="a" fill={colorMap.green}>
+            <LabelList dataKey={(d) => `${d.DA_Start}-${d.DA_Finish}`} position="insideRight" fill="#000" />
           </Bar>
-          <Bar dataKey="yellow" stackId="a" fill="#FFC107" />
+          <Bar dataKey="post" stackId="a" fill={colorMap.yellow} />
         </BarChart>
       </ResponsiveContainer>
     </div>
