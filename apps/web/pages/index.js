@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import * as XLSX from "xlsx";
 import AutocompleteBox from "../src/components/AutocompleteBox";
 import Dropdown from "../src/components/Dropdown";
@@ -30,8 +30,20 @@ export default function Home() {
       yellow: "#FFC107",
     },
   };
-
   const colorMap = colorMaps[colorMode];
+
+  // --- Handle chart point/bar clicks ---
+  const handleSelectPoint = useCallback(
+    ({ product: newProduct, vintage: newVintage }) => {
+      if (newProduct) {
+        setProduct(newProduct);
+        if (newVintage) {
+          setVintage(Number(newVintage));
+        }
+      }
+    },
+    []
+  );
 
   // --- Load default data ---
   useEffect(() => {
@@ -174,23 +186,28 @@ export default function Home() {
         {/* Charts */}
         <div style={{ marginTop: "40px" }}>
           <h2>Product Regression Chart</h2>
-          <ProductRegressionChart data={rows.filter((r) => r.Product === product)} highlightVintage={vintage} />
+          <ProductRegressionChart
+            data={rows.filter((r) => r.Product === product)}
+            highlightVintage={vintage}
+            onPointClick={handleSelectPoint}
+          />
         </div>
 
         <div style={{ marginTop: "40px" }}>
-  <h2>Price/Score by Vintage</h2>
-  <PriceScoreVintageChart
-    data={rows.filter((r) => r.Product === product)}
-    highlightVintage={vintage}
-    DA_Start={
-      rows.find((r) => r.Product === product && r.Vintage === vintage)?.DA_Start
-    }
-    DA_Finish={
-      rows.find((r) => r.Product === product && r.Vintage === vintage)?.DA_Finish
-    }
-    colorMap={colorMap}
-  />
-</div>
+          <h2>Price/Score by Vintage</h2>
+          <PriceScoreVintageChart
+            data={rows.filter((r) => r.Product === product)}
+            highlightVintage={vintage}
+            DA_Start={
+              rows.find((r) => r.Product === product && r.Vintage === vintage)?.DA_Start
+            }
+            DA_Finish={
+              rows.find((r) => r.Product === product && r.Vintage === vintage)?.DA_Finish
+            }
+            colorMap={colorMap}
+            onPointClick={handleSelectPoint}
+          />
+        </div>
 
         {/* Toggle for BestValue mode */}
         <div style={{ marginTop: "40px" }}>
