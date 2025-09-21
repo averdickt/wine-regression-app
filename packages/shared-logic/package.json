@@ -1,0 +1,9 @@
+{
+  "name": "@monorepo/shared-logic",
+  "version": "1.0.0",
+  "main": "index.js",
+  "private": true,
+  "dependencies": {
+    "mathjs": "^12.0.0"
+  }
+}
