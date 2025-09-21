@@ -1,8 +1,12 @@
 {
+  "name": "wine-app-monorepo",
   "private": true,
-  "workspaces": ["apps/*", "packages/*"],
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "web": "yarn workspace web dev",  // Adjust based on your Next.js scripts
-    "mobile": "yarn workspace mobile start"  // For React Native/Expo
+    "web": "yarn workspace web dev",
+    "mobile": "yarn workspace mobile start"
   }
 }
